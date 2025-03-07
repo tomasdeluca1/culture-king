@@ -10,7 +10,6 @@ import Link from "next/link";
 interface CompletedChallengeProps {
   userGameScore: any;
   rank: number | null;
-  timeTaken: number;
 }
 
 export function CompletedChallengeCard({

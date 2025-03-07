@@ -11,7 +11,6 @@ import toast from "react-hot-toast";
 import { QuestionCard } from "@/components/daily/QuestionCard";
 import { Question } from "@/types/game";
 import { LeaderboardCard } from "@/components/daily/LeaderboardCard";
-
 import { CompletedChallengeCard } from "@/components/daily/CompletedChallengeCard";
 
 interface DailyChallengeResponse {
@@ -28,6 +27,8 @@ export default function CultureKing() {
   const [startTime, setStartTime] = useState<number | null>(null);
   const [hasPlayed, setHasPlayed] = useState(false);
   const [rank, setRank] = useState<number | null>(null);
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  const [elapsedTime, setElapsedTime] = useState<number>(0);
 
   useEffect(() => {
     async function fetchDailyChallenge() {
@@ -85,6 +86,21 @@ export default function CultureKing() {
     }
   };
 
+  const handleStartTimer = () => {
+    setIsTimerRunning(true);
+    setStartTime(Date.now());
+  };
+
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (isTimerRunning) {
+      timer = setInterval(() => {
+        setElapsedTime(Date.now() - startTime!);
+      }, 100); // Update every 100 milliseconds
+    }
+    return () => clearInterval(timer);
+  }, [isTimerRunning, startTime]);
+
   if (isLoading)
     return (
       <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-900 to-indigo-900 text-white absolute inset-0">
@@ -132,7 +148,10 @@ export default function CultureKing() {
           property="og:description"
           content="Join thousands of players competing to be the Culture King. Test your cultural knowledge and race against the clock!"
         />
-        <meta property="og:image" content="/og-image.png" />
+        <meta
+          property="og:image"
+          content="https://culture-king.vercel.app/og-image.png"
+        />
         <meta property="og:url" content="https://culture-king.vercel.app" />
         <meta property="og:type" content="website" />
         <meta property="og:site_name" content="Culture King" />
@@ -140,17 +159,27 @@ export default function CultureKing() {
         <meta property="og:image:width" content="1200" />
         <meta property="og:image:height" content="630" />
         <meta property="og:image:alt" content="Culture King Logo" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta
+          name="twitter:title"
+          content="Culture King - Daily Knowledge Competition"
+        />
+        <meta
+          name="twitter:description"
+          content="Join thousands of players competing to be the Culture King. Test your cultural knowledge and race against the clock!"
+        />
+        <meta
+          name="twitter:image"
+          content="https://culture-king.vercel.app/og-image.png"
+        />
+        <meta name="twitter:url" content="https://culture-king.vercel.app" />
       </Head>
 
       <div className="min-h-screen bg-gradient-to-br from-purple-900 to-indigo-900 text-white p-8">
         <div className="max-w-4xl mx-auto flex flex-col gap-8">
           <LeaderboardCard />
           {hasPlayed ? (
-            <CompletedChallengeCard
-              userGameScore={userGameScore}
-              rank={rank}
-              timeTaken={startTime ? Date.now() - startTime : 0}
-            />
+            <CompletedChallengeCard userGameScore={userGameScore} rank={rank} />
           ) : (
             <div className="bg-white/10 p-6 rounded-lg backdrop-blur-sm flex flex-col gap-4">
               <div className="flex items-center gap-4 mb-6">
@@ -168,6 +197,19 @@ export default function CultureKing() {
                   </p>
                 </div>
               </div>
+
+              <button
+                onClick={handleStartTimer}
+                className="bg-yellow-500 hover:bg-yellow-400 text-black p-4 rounded-lg transition-colors"
+              >
+                Start Challenge
+              </button>
+
+              {isTimerRunning && (
+                <div className="mt-4 text-lg">
+                  Time Elapsed: {(elapsedTime / 1000).toFixed(2)} ms
+                </div>
+              )}
 
               {currentQuestion && (
                 <QuestionCard
