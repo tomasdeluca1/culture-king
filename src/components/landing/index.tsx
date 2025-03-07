@@ -514,7 +514,7 @@ export default function Landing() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             <Card className="bg-purple-900/40 border-purple-700/50 backdrop-blur-sm transition-transform transform hover:scale-105">
               <CardContent className="pt-6">
-                <h3 className="text-xl font-bold mb-4 text-yellow-400">
+                <h3 className="text-xl font-bold mb-4 text-white">
                   Weekly Development Updates
                 </h3>
                 <p className="text-purple-200 mb-4">
@@ -534,7 +534,7 @@ export default function Landing() {
 
             <Card className="bg-purple-900/40 border-purple-700/50 backdrop-blur-sm transition-transform transform hover:scale-105">
               <CardContent className="pt-6">
-                <h3 className="text-xl font-bold mb-4 text-yellow-400">
+                <h3 className="text-xl font-bold mb-4 text-white">
                   Suggest New Features
                 </h3>
                 <p className="text-purple-200 mb-4">
