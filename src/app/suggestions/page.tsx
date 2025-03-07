@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
-import SuggestionsList from "./suggestion-list";
-import SuggestionForm from "./suggestion-form";
+import { SuggestionsContainer } from "./SuggestionsContainer";
 
 export const metadata: Metadata = {
   title: "Suggest New Features | Culture King",
@@ -12,13 +11,10 @@ export default function SuggestionsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 to-indigo-900 text-white">
       <main className="container mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold mb-8 text-center">
+        <h1 className="text-3xl font-bold mb-8 text-left">
           Suggest New Features
         </h1>
-        <div className="grid md:grid-cols-2 gap-8">
-          <SuggestionForm />
-          <SuggestionsList />
-        </div>
+        <SuggestionsContainer />
       </main>
     </div>
   );
