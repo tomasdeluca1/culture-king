@@ -32,7 +32,37 @@ export default function RootLayout({
           content="Culture King, cultural knowledge, trivia, leaderboard, game"
         />
         <meta name="author" content="Your Name" />
-
+        <link rel="icon" href="/favicon.ico" />
+        <meta property="og:title" content="Culture King" />
+        <meta
+          property="og:description"
+          content="Join thousands of players competing to be the Culture King. Test your cultural knowledge and race against the clock!"
+        />
+        <meta
+          property="og:image"
+          content="https://culture-king.vercel.app/og-image.png"
+        />
+        <meta property="og:url" content="https://culture-king.vercel.app" />
+        <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Culture King" />
+        <meta property="og:locale" content="en_US" />
+        <meta property="og:image:width" content="1200" />
+        <meta property="og:image:height" content="630" />
+        <meta property="og:image:alt" content="Culture King Logo" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta
+          name="twitter:title"
+          content="Culture King - Daily Knowledge Competition"
+        />
+        <meta
+          name="twitter:description"
+          content="Join thousands of players competing to be the Culture King. Test your cultural knowledge and race against the clock!"
+        />
+        <meta
+          name="twitter:image"
+          content="https://culture-king.vercel.app/og-image.png"
+        />
+        <meta name="twitter:url" content="https://culture-king.vercel.app" />
         <title>Culture King</title>
       </head>
       <UserProvider>
