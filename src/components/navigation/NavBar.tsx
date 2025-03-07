@@ -1,66 +1,60 @@
 "use client";
 
 import Link from "next/link";
+import { useUser } from "@auth0/nextjs-auth0/client";
+import { Crown } from "lucide-react";
+import UserDropdown from "./UserDropdown";
 import { usePathname } from "next/navigation";
-import { motion } from "framer-motion";
-import { useAuth } from "@/hooks/useAuth";
 
 export function NavBar() {
+  const { user } = useUser();
   const pathname = usePathname();
-  const { isConfigured, user, login, logout } = useAuth();
-
-  const isLandingPage = pathname === "/landing";
-
   return (
-    <motion.div
-      initial={{ y: -20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      className="navbar bg-base-100/50 backdrop-blur-lg fixed top-0 z-50 border-b border-base-content/5"
-    >
-      <div className="navbar-start">
-        <Link href="/" className="btn btn-ghost text-xl">
-          🥚 Huev
+    <header className="container mx-auto px-4 pt-8 lg:pt-12">
+      <div className="flex justify-between items-center">
+        <Link href="/" className="flex items-center gap-2">
+          <Crown className="h-8 w-8 text-yellow-400" />
+          <span className="text-2xl font-bold">Culture King</span>
+        </Link>
+
+        <div className="hidden md:flex gap-6 items-center">
+          <Link
+            href="/#how-to-play"
+            className="hover:text-yellow-400 transition-colors"
+          >
+            How to Play
+          </Link>
+          <Link
+            href="/#leaderboards"
+            className="hover:text-yellow-400 transition-colors"
+          >
+            Leaderboards
+          </Link>
+          <Link
+            href="/#community"
+            className="hover:text-yellow-400 transition-colors"
+          >
+            Community
+          </Link>
+
+          {pathname.includes("/daily") ? (
+            <UserDropdown />
+          ) : (
+            <Link
+              className="bg-yellow-500 hover:bg-yellow-400 text-black px-4 py-2 rounded-md"
+              href={user ? "/daily" : "/api/auth/login?returnTo=/daily"}
+            >
+              Play Now
+            </Link>
+          )}
+        </div>
+        <Link
+          className="md:hidden bg-yellow-500 hover:bg-yellow-400 text-black px-4 py-2 rounded-md"
+          href={user ? "/daily" : "/api/auth/login?returnTo=/daily"}
+        >
+          Play
         </Link>
       </div>
-      <div className="navbar-center hidden lg:flex">
-        <ul className="menu menu-horizontal px-1 gap-2">
-          {isLandingPage ? (
-            <>
-              <li>
-                <Link href="/docs">Documentation</Link>
-              </li>
-              <li>
-                <Link href="/get-started">Get Started</Link>
-              </li>
-              <li>
-                <Link href="/examples">Examples</Link>
-              </li>
-            </>
-          ) : (
-            <>
-              <li>
-                <Link href="/landing">Landing Page</Link>
-              </li>
-              <li>
-                <Link href="/docs">Documentation</Link>
-              </li>
-              <li>
-                <Link href="/examples">Examples</Link>
-              </li>
-            </>
-          )}
-        </ul>
-      </div>
-      <div className="navbar-end">
-        {isConfigured && (
-          <button
-            onClick={user ? logout : login}
-            className="btn btn-primary btn-sm"
-          >
-            {user ? "Logout" : "Login"}
-          </button>
-        )}
-      </div>
-    </motion.div>
+    </header>
   );
 }

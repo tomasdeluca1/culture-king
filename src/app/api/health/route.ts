@@ -1,11 +1,9 @@
-import connectDB from "@/lib/mongodb";
 import { successResponse, errorResponse } from "@/lib/api/responseHandler";
 import { ApiError } from "@/lib/errors/ApiError";
 
 export async function GET() {
   try {
-    await connectDB();
-    return successResponse({ status: "Connected to MongoDB" });
+    return successResponse({ status: "OK" });
   } catch (error) {
     if (error instanceof ApiError) {
       return errorResponse(error);
