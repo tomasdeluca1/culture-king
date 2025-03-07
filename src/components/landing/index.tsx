@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -7,7 +8,6 @@ import {
   Users,
   Crown,
   ArrowRight,
-  Calendar,
   Star,
   Zap,
   Brain,
@@ -23,161 +23,120 @@ import {
 } from "../../components/ui/tabs";
 import { Badge } from "../../components/ui/badge";
 import { motion } from "framer-motion";
+import axios from "axios";
+import Image from "next/image";
+import { getTimeUntilReset } from "@/lib/utils/time";
+import { useRouter } from "next/navigation";
+
+interface LeaderboardPlayer {
+  userId: string;
+  name: string;
+  picture: string;
+  score: number;
+  correctAnswers: number;
+  timeTaken: number;
+  date: string;
+}
+
+interface LeaderboardData {
+  daily: LeaderboardPlayer[];
+  monthly: LeaderboardPlayer[];
+  yearly: LeaderboardPlayer[];
+}
 
 export default function Landing() {
-  const [countdown, setCountdown] = useState({
-    hours: 0,
-    minutes: 0,
-    seconds: 0,
+  const [countdown, setCountdown] = useState(getTimeUntilReset());
+  const [stats, setStats] = useState<any>(null);
+  const [leaderboardData, setLeaderboardData] = useState<LeaderboardData>({
+    daily: [],
+    monthly: [],
+    yearly: [],
   });
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Simulate countdown to next daily reset
+  const router = useRouter();
+
+  async function fetchStats() {
+    try {
+      const { data } = await axios.get<any>("/api/stats");
+      setStats(data);
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function fetchLeaderboard() {
+    try {
+      const [dailyData, monthlyData, yearlyData] = await Promise.all([
+        axios.get("/api/leaderboards?period=daily"),
+        axios.get("/api/leaderboards?period=monthly"),
+        axios.get("/api/leaderboards?period=yearly"),
+      ]);
+
+      setLeaderboardData({
+        daily: dailyData.data,
+        monthly: monthlyData.data,
+        yearly: yearlyData.data,
+      });
+    } catch (error) {
+      console.error("Error fetching leaderboard:", error);
+    }
+  }
+
   useEffect(() => {
-    const calculateTimeLeft = () => {
-      const now = new Date();
-      const midnight = new Date(now);
-      midnight.setHours(24, 0, 0, 0);
-      const difference = midnight.getTime() - now.getTime();
-
-      return {
-        hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-        minutes: Math.floor((difference / 1000 / 60) % 60),
-        seconds: Math.floor((difference / 1000) % 60),
-      };
-    };
-
     const timer = setInterval(() => {
-      setCountdown(calculateTimeLeft());
+      const timeLeft = getTimeUntilReset();
+      setCountdown(timeLeft);
+
+      // Optional: Refresh page at reset time
+      if (timeLeft.total <= 0) {
+        window.location.reload();
+      }
     }, 1000);
 
-    setCountdown(calculateTimeLeft());
+    fetchStats();
+    fetchLeaderboard();
 
-    return () => clearInterval(timer);
+    return () => {
+      clearInterval(timer);
+    };
   }, []);
 
-  // Mock leaderboard data
-  const leaderboardData = {
-    daily: [
-      {
-        name: "Alex",
-        score: 5,
-        time: "00:42",
-        avatar: "/placeholder.webp",
-      },
-      {
-        name: "Jamie",
-        score: 5,
-        time: "00:51",
-        avatar: "/placeholder.webp",
-      },
-      {
-        name: "Taylor",
-        score: 5,
-        time: "01:03",
-        avatar: "/placeholder.webp",
-      },
-      {
-        name: "Jordan",
-        score: 4,
-        time: "00:38",
-        avatar: "/placeholder.webp",
-      },
-      {
-        name: "Casey",
-        score: 4,
-        time: "00:45",
-        avatar: "/placeholder.webp",
-      },
-    ],
-    weekly: [
-      {
-        name: "Morgan",
-        score: 35,
-        time: "05:12",
-        avatar: "/placeholder.webp",
-      },
-      {
-        name: "Alex",
-        score: 34,
-        time: "05:30",
-        avatar: "/placeholder.webp",
-      },
-      {
-        name: "Riley",
-        score: 33,
-        time: "04:58",
-        avatar: "/placeholder.webp",
-      },
-      {
-        name: "Taylor",
-        score: 32,
-        time: "05:45",
-        avatar: "/placeholder.webp",
-      },
-      {
-        name: "Jamie",
-        score: 30,
-        time: "04:22",
-        avatar: "/placeholder.webp",
-      },
-    ],
-    monthly: [
-      {
-        name: "Riley",
-        score: 142,
-        time: "22:15",
-        avatar: "/placeholder.webp",
-      },
-      {
-        name: "Morgan",
-        score: 138,
-        time: "23:42",
-        avatar: "/placeholder.webp",
-      },
-      {
-        name: "Casey",
-        score: 135,
-        time: "21:37",
-        avatar: "/placeholder.webp",
-      },
-      {
-        name: "Alex",
-        score: 129,
-        time: "20:18",
-        avatar: "/placeholder.webp",
-      },
-      {
-        name: "Jordan",
-        score: 125,
-        time: "19:54",
-        avatar: "/placeholder.webp",
-      },
-    ],
-  };
-
-  // Scroll to section if pathname matches an id
   useEffect(() => {
-    const handleScrollToSection = () => {
-      const sectionId = window.location.hash.replace("#", "");
-      if (sectionId) {
+    const handleHashChange = () => {
+      if (typeof window !== "undefined") {
+        const sectionId = window.location.hash.substring(1);
         const section = document.getElementById(sectionId);
         section?.scrollIntoView({ behavior: "smooth" });
       }
     };
 
-    if (window.location.hash) {
-      handleScrollToSection();
+    if (typeof window !== "undefined") {
+      window.addEventListener("hashchange", handleHashChange);
+      return () => window.removeEventListener("hashchange", handleHashChange);
     }
-
-    window.addEventListener("hashchange", handleScrollToSection);
-
-    return () => {
-      window.removeEventListener("hashchange", handleScrollToSection);
-    };
   }, []);
 
+  const handlePlayNow = () => {
+    router.push("/daily");
+  };
+
+  const handleSuggestions = () => {
+    router.push("/suggestions");
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-[700px] flex items-center justify-center">
+        <div className="loading loading-spinner loading-lg"></div>
+      </div>
+    );
+  }
+
   return (
-    <main>
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 to-indigo-900 text-white">
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-16 md:py-24 flex flex-col lg:flex-row items-center gap-12">
         <div className="lg:w-1/2 space-y-6">
@@ -197,14 +156,14 @@ export default function Landing() {
             <Button
               size="lg"
               className="bg-yellow-500 hover:bg-yellow-400 text-black text-lg"
-              onClick={() => (window.location.href = "/daily")}
+              onClick={handlePlayNow}
             >
               Play Now <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
             <Button
               size="lg"
               variant="outline"
-              className="border-white hover:bg-white/10 text-lg"
+              onClick={() => window.open("https://x.com/culturek1ng", "_blank")}
             >
               Learn More
             </Button>
@@ -213,8 +172,11 @@ export default function Landing() {
           <div className="flex items-center gap-2 text-purple-200">
             <Users className="h-5 w-5" />
             <span>
-              Join <span className="font-bold text-white">2,500+</span> players
-              competing right now
+              Join{" "}
+              <span className="font-bold text-white">
+                {stats?.totalPlayers}+
+              </span>{" "}
+              players competing right now
             </span>
           </div>
         </div>
@@ -253,34 +215,49 @@ export default function Landing() {
             </div>
 
             <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <div className="flex items-center gap-2">
-                  <div className="bg-yellow-500 text-black font-bold rounded-full w-8 h-8 flex items-center justify-center">
-                    1
-                  </div>
+              {leaderboardData.daily && leaderboardData.daily.length > 0 && (
+                <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
-                    <img
-                      src="/placeholder.webp"
-                      alt="Top player"
-                      className="rounded-full w-8 h-8"
-                    />
-                    <span className="font-semibold">Alex</span>
+                    <div className="bg-yellow-500 text-black font-bold rounded-full w-8 h-8 flex items-center justify-center">
+                      1
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Image
+                        width={32}
+                        height={32}
+                        src={
+                          leaderboardData.daily[0].picture ||
+                          "/placeholder.webp"
+                        }
+                        alt="Top player"
+                        className="rounded-full w-8 h-8"
+                      />
+                      <span className="font-semibold">
+                        {leaderboardData.daily[0].name}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center">
+                      <Star className="h-4 w-4 text-yellow-400 mr-1" />
+                      <span>{leaderboardData.daily[0].correctAnswers}/5</span>
+                    </div>
+                    <div className="flex items-center">
+                      <Clock className="h-4 w-4 text-purple-300 mr-1" />
+                      <span>
+                        {(leaderboardData.daily[0].timeTaken / 1000).toFixed(2)}
+                        s
+                      </span>
+                    </div>
+                    <Crown className="h-5 w-5 text-yellow-400" />
                   </div>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center">
-                    <Star className="h-4 w-4 text-yellow-400 mr-1" />
-                    <span>5/5</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Clock className="h-4 w-4 text-purple-300 mr-1" />
-                    <span>00:42</span>
-                  </div>
-                  <Crown className="h-5 w-5 text-yellow-400" />
-                </div>
-              </div>
+              )}
 
-              <Button className="w-full bg-yellow-500 hover:bg-yellow-400 text-black">
+              <Button
+                className="w-full bg-yellow-500 hover:bg-yellow-400 text-black"
+                onClick={handlePlayNow}
+              >
                 Take Today's Challenge
               </Button>
             </div>
@@ -351,6 +328,7 @@ export default function Landing() {
             <Button
               size="lg"
               className="bg-yellow-500 hover:bg-yellow-400 text-black"
+              onClick={handlePlayNow}
             >
               Start Playing Now
             </Button>
@@ -358,94 +336,92 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Leaderboard Preview Section */}
-      <section id="leaderboards" className="py-20">
+      {/* Leaderboard Section */}
+      <section className="py-20" id="leaderboard">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
-            <Badge className="mb-4 bg-purple-700 text-white px-4 py-1 text-sm">
-              Competition
-            </Badge>
-            <h2 className="text-3xl md:text-5xl font-bold mb-4">
-              Leaderboards
-            </h2>
-            <p className="text-xl text-purple-200 max-w-3xl mx-auto">
-              See who's currently ruling the Culture Kingdom. Will you be next
-              to wear the crown?
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Top Players</h2>
+            <p className="text-purple-200">
+              Compete with the best and claim your spot on the leaderboard
             </p>
           </div>
 
           <Tabs defaultValue="daily" className="max-w-4xl mx-auto">
-            <TabsList className="grid grid-cols-3 mb-8 p-1 bg-base-100 rounded-lg shadow-lg gap-2">
-              <TabsTrigger
-                value="daily"
-                className="data-[state=active]:bg-gradient-to-b data-[state=active]:from-yellow-500 data-[state=active]:to-yellow-400 data-[state=active]:text-black text-base-content flex items-center justify-center p-2 rounded-lg transition-colors duration-200 hover:bg-yellow-400"
-              >
-                <Calendar className="mr-2 h-4 w-4" /> Daily
-              </TabsTrigger>
-              <TabsTrigger
-                value="weekly"
-                className="data-[state=active]:bg-gradient-to-b data-[state=active]:from-yellow-500 data-[state=active]:to-yellow-400 data-[state=active]:text-black text-base-content flex items-center justify-center p-2 rounded-lg transition-colors duration-200 hover:bg-yellow-400"
-              >
-                <Calendar className="mr-2 h-4 w-4" /> Weekly
-              </TabsTrigger>
-              <TabsTrigger
-                value="monthly"
-                className="data-[state=active]:bg-gradient-to-b data-[state=active]:from-yellow-500 data-[state=active]:to-yellow-400 data-[state=active]:text-black text-base-content flex items-center justify-center p-2 rounded-lg transition-colors duration-200 hover:bg-yellow-400"
-              >
-                <Calendar className="mr-2 h-4 w-4" /> Monthly
-              </TabsTrigger>
+            <TabsList className="grid grid-cols-3 mb-8 rounded-lg shadow-lg gap-2 mx-auto p-2 bg-gradient-to-r from-purple-900 to-purple-800 sborder border-purple-700/50 backdrop-blur-sm">
+              {["Daily", "Monthly", "Yearly"].map((period) => (
+                <TabsTrigger
+                  key={period.toLowerCase()}
+                  value={period.toLowerCase()}
+                  className="hover:bg-purple-700 data-[state=active]:bg-gradient-to-b data-[state=active]:from-yellow-500 data-[state=active]:to-yellow-400 data-[state=active]:text-black transition-colors duration-200 text-white font-semibold py-2 rounded-lg"
+                >
+                  {period}
+                </TabsTrigger>
+              ))}
             </TabsList>
 
-            {Object.entries(leaderboardData).map(([period, data]) => (
+            {Object.entries(leaderboardData).map(([period, players]) => (
               <TabsContent key={period} value={period}>
-                <Card className="bg-purple-900/40 border-purple-700/50 backdrop-blur-sm">
+                <Card className="bg-purple-900/50 border-purple-700/50 backdrop-blur-sm shadow-lg">
                   <CardContent className="pt-6">
                     <div className="space-y-4">
-                      {data.map((player, index) => (
-                        <div
-                          key={index}
-                          className="flex justify-between items-center p-3 rounded-lg bg-purple-800/30 border border-purple-700/30"
+                      {players.slice(0, 5).map((player: any, index: number) => (
+                        <motion.div
+                          key={`${player.userId}-${player.date}`}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                          className="flex justify-between items-center p-4 rounded-lg bg-purple-800/40 border border-purple-600/30 shadow-md"
                         >
                           <div className="flex items-center gap-3">
-                            <div
-                              className={`font-bold rounded-full w-8 h-8 flex items-center justify-center ${
+                            <Badge
+                              className={`w-8 h-8 flex items-center justify-center rounded-full ${
                                 index === 0
-                                  ? "bg-yellow-500 text-black"
+                                  ? "bg-yellow-500"
                                   : index === 1
-                                  ? "bg-gray-300 text-gray-800"
+                                  ? "bg-gray-300"
                                   : index === 2
-                                  ? "bg-amber-700 text-amber-100"
-                                  : "bg-purple-700"
-                              }`}
+                                  ? "bg-amber-600"
+                                  : "bg-white/10"
+                              } text-black font-bold`}
                             >
                               {index + 1}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <img
-                                src={player.avatar || "/placeholder.webp"}
-                                alt={player.name}
-                                className="rounded-full w-8 h-8"
-                              />
-                              <span className="font-semibold">
-                                {player.name}
-                              </span>
-                            </div>
+                            </Badge>
+                            <Image
+                              src={player.picture || "/placeholder.webp"}
+                              alt={player.name}
+                              width={40}
+                              height={40}
+                              className="rounded-full border-2 border-white"
+                            />
+                            <span className="font-semibold text-lg text-white">
+                              {player.name}
+                            </span>
                           </div>
                           <div className="flex items-center gap-4">
                             <div className="flex items-center">
                               <Star className="h-4 w-4 text-yellow-400 mr-1" />
-                              <span>{player.score}</span>
+                              <span className="text-sm text-white">
+                                {player.correctAnswers}/5
+                              </span>
                             </div>
                             <div className="flex items-center">
                               <Clock className="h-4 w-4 text-purple-300 mr-1" />
-                              <span>{player.time}</span>
+                              <span className="text-sm text-white">
+                                {(player.timeTaken / 1000).toFixed(2)}s
+                              </span>
                             </div>
                             {index === 0 && (
                               <Crown className="h-5 w-5 text-yellow-400" />
                             )}
                           </div>
-                        </div>
+                        </motion.div>
                       ))}
+
+                      {players.length === 0 && (
+                        <div className="text-center py-8 text-gray-400">
+                          No scores yet for this period.
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -453,12 +429,13 @@ export default function Landing() {
             ))}
           </Tabs>
 
-          <div className="mt-12 text-center">
+          <div className="text-center mt-8">
             <Button
               size="lg"
               className="bg-yellow-500 hover:bg-yellow-400 text-black"
+              onClick={handlePlayNow}
             >
-              Join the Competition
+              Start Playing Now
             </Button>
           </div>
         </div>
@@ -546,10 +523,10 @@ export default function Landing() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            <Card className="bg-purple-900/40 border-purple-700/50 backdrop-blur-sm">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <Card className="bg-purple-900/40 border-purple-700/50 backdrop-blur-sm transition-transform transform hover:scale-105">
               <CardContent className="pt-6">
-                <h3 className="text-xl font-bold mb-4">
+                <h3 className="text-xl font-bold mb-4 text-white">
                   Weekly Development Updates
                 </h3>
                 <p className="text-purple-200 mb-4">
@@ -558,27 +535,25 @@ export default function Landing() {
                 </p>
                 <Button
                   variant="outline"
-                  className="border-white hover:bg-white/10"
                   onClick={() => {
                     window.open("https://www.x.com/culturek1ng", "_blank");
                   }}
                 >
-                  Follow Our Build Journey
+                  Follow Our Journey
                 </Button>
               </CardContent>
             </Card>
 
-            <Card className="bg-purple-900/40 border-purple-700/50 backdrop-blur-sm">
+            <Card className="bg-purple-900/40 border-purple-700/50 backdrop-blur-sm transition-transform transform hover:scale-105">
               <CardContent className="pt-6">
-                <h3 className="text-xl font-bold mb-4">Suggest New Features</h3>
+                <h3 className="text-xl font-bold mb-4 text-white">
+                  Suggest New Features
+                </h3>
                 <p className="text-purple-200 mb-4">
                   Have ideas for new question categories or game mechanics?
                   We're all ears!
                 </p>
-                <Button
-                  variant="outline"
-                  className="border-white hover:bg-white/10"
-                >
+                <Button variant="outline" onClick={handleSuggestions}>
                   Submit Your Ideas
                 </Button>
               </CardContent>
@@ -603,7 +578,9 @@ export default function Landing() {
                     competition is fierce but friendly!"
                   </p>
                   <div className="flex items-center gap-2">
-                    <img
+                    <Image
+                      width={32}
+                      height={32}
                       src="/placeholder.webp"
                       alt="User"
                       className="rounded-full w-8 h-8"
@@ -628,7 +605,9 @@ export default function Landing() {
                     from the creators is refreshing."
                   </p>
                   <div className="flex items-center gap-2">
-                    <img
+                    <Image
+                      width={32}
+                      height={32}
                       src="/placeholder.webp"
                       alt="User"
                       className="rounded-full w-8 h-8"
@@ -653,7 +632,9 @@ export default function Landing() {
                     time pressure makes it exciting!"
                   </p>
                   <div className="flex items-center gap-2">
-                    <img
+                    <Image
+                      width={32}
+                      height={32}
                       src="/placeholder.webp"
                       alt="User"
                       className="rounded-full w-8 h-8"
@@ -691,16 +672,16 @@ export default function Landing() {
             <Button
               size="lg"
               className="bg-yellow-500 hover:bg-yellow-400 text-black text-lg px-8"
-              onClick={() => (window.location.href = "/daily-challenge")}
+              onClick={handlePlayNow}
             >
               Play Now <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
             <p className="mt-4 text-purple-200">
-              No registration required. Just play and compete!
+              Sign in with Twitter or Google to play and compete!
             </p>
           </motion.div>
         </div>
       </section>
-    </main>
+    </div>
   );
 }

@@ -6,7 +6,7 @@ import React from "react";
 export default function UserDropdown() {
   const { user } = useUser();
   return user ? (
-    <div className="dropdown dropdown-end">
+    <div className="dropdown dropdown-end z-50">
       <div tabIndex={0} className="hover:cursor-pointer text-white ">
         <Image
           src={user.picture?.replace("_normal", "") || ""}
@@ -18,7 +18,7 @@ export default function UserDropdown() {
       </div>
       <ul
         tabIndex={0}
-        className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52"
+        className="dropdown-content menu p-2 shadow bg-base-100 rounded-box w-52 mt-2"
       >
         <li>
           <Link

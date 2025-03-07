@@ -11,6 +11,8 @@ import { NavBar } from "@/components/navigation/NavBar";
 import { Toaster } from "react-hot-toast";
 const inter = Inter({ subsets: ["latin"] });
 
+export const dynamic = "force-dynamic";
+
 export default function RootLayout({
   children,
 }: {
