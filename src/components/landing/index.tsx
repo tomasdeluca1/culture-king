@@ -26,6 +26,7 @@ import { motion } from "framer-motion";
 import axios from "axios";
 import Image from "next/image";
 import { getTimeUntilReset } from "@/lib/utils/time";
+import { useRouter } from "next/navigation";
 
 interface LeaderboardPlayer {
   userId: string;
@@ -52,6 +53,8 @@ export default function Landing() {
     yearly: [],
   });
   const [isLoading, setIsLoading] = useState(true);
+
+  const router = useRouter();
 
   async function fetchStats() {
     try {
@@ -103,17 +106,26 @@ export default function Landing() {
 
   useEffect(() => {
     const handleHashChange = () => {
-      const sectionId = window.location.hash.substring(1);
-      const section = document.getElementById(sectionId);
-      section?.scrollIntoView({ behavior: "smooth" });
+      if (typeof window !== "undefined") {
+        const sectionId = window.location.hash.substring(1);
+        const section = document.getElementById(sectionId);
+        section?.scrollIntoView({ behavior: "smooth" });
+      }
     };
 
-    window.addEventListener("hashchange", handleHashChange);
+    if (typeof window !== "undefined") {
+      window.addEventListener("hashchange", handleHashChange);
+      return () => window.removeEventListener("hashchange", handleHashChange);
+    }
+  }, []);
 
-    return () => {
-      window.removeEventListener("hashchange", handleHashChange);
-    };
-  }, [window.location.hash]);
+  const handlePlayNow = () => {
+    router.push("/daily");
+  };
+
+  const handleSuggestions = () => {
+    router.push("/suggestions");
+  };
 
   if (isLoading) {
     return (
@@ -144,7 +156,7 @@ export default function Landing() {
             <Button
               size="lg"
               className="bg-yellow-500 hover:bg-yellow-400 text-black text-lg"
-              onClick={() => (window.location.href = "/daily")}
+              onClick={handlePlayNow}
             >
               Play Now <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
@@ -244,7 +256,7 @@ export default function Landing() {
 
               <Button
                 className="w-full bg-yellow-500 hover:bg-yellow-400 text-black"
-                onClick={() => (window.location.href = "/daily")}
+                onClick={handlePlayNow}
               >
                 Take Today's Challenge
               </Button>
@@ -316,7 +328,7 @@ export default function Landing() {
             <Button
               size="lg"
               className="bg-yellow-500 hover:bg-yellow-400 text-black"
-              onClick={() => (window.location.href = "/daily")}
+              onClick={handlePlayNow}
             >
               Start Playing Now
             </Button>
@@ -421,7 +433,7 @@ export default function Landing() {
             <Button
               size="lg"
               className="bg-yellow-500 hover:bg-yellow-400 text-black"
-              onClick={() => (window.location.href = "/daily")}
+              onClick={handlePlayNow}
             >
               Start Playing Now
             </Button>
@@ -541,10 +553,7 @@ export default function Landing() {
                   Have ideas for new question categories or game mechanics?
                   We're all ears!
                 </p>
-                <Button
-                  variant="outline"
-                  onClick={() => (window.location.href = "/suggestions")}
-                >
+                <Button variant="outline" onClick={handleSuggestions}>
                   Submit Your Ideas
                 </Button>
               </CardContent>
@@ -663,7 +672,7 @@ export default function Landing() {
             <Button
               size="lg"
               className="bg-yellow-500 hover:bg-yellow-400 text-black text-lg px-8"
-              onClick={() => (window.location.href = "/daily")}
+              onClick={handlePlayNow}
             >
               Play Now <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
