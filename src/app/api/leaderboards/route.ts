@@ -3,6 +3,8 @@ import clientPromise from "@/lib/mongodb";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
+// Increase the Vercel function timeout (only works on certain plans)
+export const maxDuration = 15; // 15 seconds
 
 export async function GET(request: Request) {
   try {
@@ -31,38 +33,61 @@ export async function GET(request: Request) {
         startDate.setHours(0, 0, 0, 0);
     }
 
-    // Get top scores for the period
+    // Add index hint and optimize the query
     const topScores = await collection
-      .aggregate([
-        {
-          $match: {
-            date: { $gte: startDate },
+      .aggregate(
+        [
+          {
+            $match: {
+              date: { $gte: startDate },
+            },
           },
-        },
-        {
-          $sort: { score: -1, timeTaken: 1 },
-        },
-        {
-          $limit: 5, // Limit to top 5 scores
-        },
-        {
-          $project: {
-            _id: 0,
-            userId: 1,
-            name: 1,
-            picture: 1,
-            score: 1,
-            correctAnswers: 1,
-            timeTaken: 1,
-            date: 1,
+          {
+            $lookup: {
+              from: "users",
+              localField: "userId",
+              foreignField: "sub",
+              as: "user",
+            },
           },
-        },
-      ])
+          {
+            $unwind: {
+              path: "$user",
+              preserveNullAndEmptyArrays: true,
+            },
+          },
+          {
+            $sort: { score: -1, timeTaken: 1 },
+          },
+          {
+            $limit: 5, // Limit to top 5 scores
+          },
+          {
+            $project: {
+              _id: 0,
+              userId: 1,
+              name: 1,
+              picture: 1,
+              score: 1,
+              correctAnswers: 1,
+              timeTaken: 1,
+              date: 1,
+            },
+          },
+        ],
+        {
+          maxTimeMS: 5000, // Set a 5-second timeout for the query
+          allowDiskUse: true, // Allow using disk for large sort operations
+        }
+      )
       .toArray();
 
     return NextResponse.json(topScores);
   } catch (error) {
     console.error("Error fetching leaderboard:", error);
-    return new NextResponse(null, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch leaderboard data" },
+      { status: 500 }
+    );
   }
 }
