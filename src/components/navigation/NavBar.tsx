@@ -64,21 +64,21 @@ export function NavBar() {
             </Link>
 
             {!pathname.includes("/daily") && (
-              <Link
+              <a
                 className="btn btn-ghost btn-sm bg-yellow-500 hover:bg-yellow-400 text-black"
                 href={user ? "/daily" : "/api/auth/login?returnTo=/daily"}
               >
                 Play Now
-              </Link>
+              </a>
             )}
             <UserDropdown />
           </div>
-          <Link
+          <a
             className="md:hidden bg-yellow-500 hover:bg-yellow-400 text-black px-4 py-2 rounded-md"
             href={user ? "/daily" : "/api/auth/login?returnTo=/daily"}
           >
             Play
-          </Link>
+          </a>
         </div>
       </header>
     </nav>

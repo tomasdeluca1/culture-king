@@ -48,12 +48,12 @@ export default function UserDropdown() {
       </ul>
     </div>
   ) : (
-    <Link
+    <a
       className="flex items-center justify-center btn btn-ghost btn-sm bg-yellow-500 hover:bg-yellow-400 text-black tooltip tooltip-bottom"
       href="/api/auth/login"
       data-tip="Login"
     >
       <LogIn className="w-5 h-5" />
-    </Link>
+    </a>
   );
 }

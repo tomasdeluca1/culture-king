@@ -1,9 +1,8 @@
 import { useUser } from "@auth0/nextjs-auth0/client";
-import { useRouter } from "next/navigation";
+
 import { authConfig } from "@/lib/config/auth";
 
 export function useAuth() {
-  const router = useRouter();
   const auth0 = authConfig.isEnabled
     ? useUser()
     : {
@@ -17,7 +16,7 @@ export function useAuth() {
       console.warn("Auth0 is not configured");
       return;
     }
-    router.push("/api/auth/login");
+    window.location.href = "/api/auth/login";
   };
 
   const logout = () => {
@@ -25,7 +24,7 @@ export function useAuth() {
       console.warn("Auth0 is not configured");
       return;
     }
-    router.push("/api/auth/logout");
+    window.location.href = "/api/auth/logout";
   };
 
   const signup = () => {
@@ -33,7 +32,7 @@ export function useAuth() {
       console.warn("Auth0 is not configured");
       return;
     }
-    router.push("/api/auth/signup");
+    window.location.href = "/api/auth/signup";
   };
 
   return {
