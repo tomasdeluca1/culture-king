@@ -1,4 +1,3 @@
-import { getSession } from "@auth0/nextjs-auth0";
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 
@@ -7,11 +6,6 @@ export const runtime = "nodejs";
 
 export async function GET(request: Request) {
   try {
-    const session = await getSession();
-    if (!session?.user) {
-      return new NextResponse(null, { status: 401 });
-    }
-
     const { searchParams } = new URL(request.url);
     const period = searchParams.get("period") || "daily";
 
@@ -49,7 +43,7 @@ export async function GET(request: Request) {
           $sort: { score: -1, timeTaken: 1 },
         },
         {
-          $limit: 100,
+          $limit: 5, // Limit to top 5 scores
         },
         {
           $project: {

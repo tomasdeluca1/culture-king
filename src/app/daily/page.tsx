@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useEffect, useState } from "react";
@@ -7,22 +6,30 @@ import Head from "next/head";
 import Image from "next/image";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { motion, AnimatePresence } from "framer-motion";
+import { Timer } from "lucide-react";
 
 import { QuestionCard } from "@/components/daily/QuestionCard";
 import { Question } from "@/types/game";
 import { LeaderboardCard } from "@/components/daily/LeaderboardCard";
-import { CompletedChallengeCard } from "@/components/daily/CompletedChallengeCard";
+// import { CompletedChallengeCard } from "@/components/daily/CompletedChallengeCard";
+import { ChallengeResultCard } from "@/components/daily/ChallengeResultCard";
 
 interface DailyChallengeResponse {
   hasPlayed: boolean;
   questions?: Question[];
-  userGameScore?: any;
+  userGameScore?: { score: number; rank?: number } | null;
 }
 
 export default function CultureKing() {
   const { user, isLoading } = useUser();
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
-  const [userGameScore, setUserGameScore] = useState<any>(null);
+  const [userGameScore, setUserGameScore] = useState<{
+    score: number;
+    rank?: number;
+    correctAnswers?: number;
+    timeTaken?: number;
+  } | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [startTime, setStartTime] = useState<number | null>(null);
   const [hasPlayed, setHasPlayed] = useState(false);
@@ -38,8 +45,8 @@ export default function CultureKing() {
         );
         if (response.data.hasPlayed) {
           setHasPlayed(true);
-          setUserGameScore(response?.data?.userGameScore || null);
-          setRank(response?.data?.userGameScore?.rank || null);
+          setUserGameScore(response.data.userGameScore || null);
+          setRank(response.data.userGameScore?.rank || null);
         } else if (response.data.questions) {
           setQuestions(response.data.questions);
           setCurrentQuestion(response.data.questions[0]);
@@ -60,27 +67,53 @@ export default function CultureKing() {
     if (!currentQuestion || !startTime) return;
 
     const isCorrect = currentQuestion.correct_answer === answer;
+
+    // Update the score immediately for user feedback
     if (isCorrect) {
-      setUserGameScore((prev: any) => ({
-        ...prev,
-        score: (prev.score || 0) + 1,
+      setUserGameScore((prev) => ({
+        score: (prev?.score || 0) + 1,
+        rank: prev?.rank,
       }));
     }
 
+    // If this was the last question
     if (questions.length === 1) {
       const timeTaken = Date.now() - startTime;
+      const correctAnswers = (userGameScore?.score || 0) + (isCorrect ? 1 : 0);
+
+      // Calculate final score
+      // Base score: 1000 points per correct answer
+      // Time bonus: Up to 500 points based on speed (faster = more points)
+      // Maximum time allowed: 30 seconds per question
+      const maxTimeAllowed = 30000 * 5; // 30 seconds * 5 questions
+      const timeBonus = Math.max(0, maxTimeAllowed - timeTaken) / 60; // Up to 500 points
+      const finalScore = correctAnswers * 1000 + timeBonus;
+
       try {
         const response = await axios.post("/api/daily-challenge", {
-          correctAnswers: userGameScore.score + (isCorrect ? 1 : 0),
+          correctAnswers,
           timeTaken,
+          score: Math.round(finalScore),
         });
-        setRank(response.data.rank);
-        setHasPlayed(true);
+
+        if (response.data) {
+          console.log(response);
+          setRank(response.data.rank);
+          setUserGameScore({
+            score: response.data.score,
+            correctAnswers: response.data.correctAnswers,
+            timeTaken: response.data.timeTaken,
+          });
+          setHasPlayed(true);
+          setStartTime(null);
+          toast("Challenge completed!");
+        }
       } catch (error) {
         console.error("Error saving challenge result:", error);
         toast.error("Failed to save your score");
       }
     } else {
+      // Move to next question
       setCurrentQuestion(questions[1]);
       setQuestions((prev) => prev.slice(1));
     }
@@ -177,47 +210,74 @@ export default function CultureKing() {
 
       <div className="min-h-screen bg-gradient-to-br from-purple-900 to-indigo-900 text-white p-8">
         <div className="max-w-4xl mx-auto flex flex-col gap-8">
-          <LeaderboardCard />
+          {!isTimerRunning && <LeaderboardCard />}
+
           {hasPlayed ? (
-            <CompletedChallengeCard userGameScore={userGameScore} rank={rank} />
+            <ChallengeResultCard
+              score={userGameScore?.score || 0}
+              rank={rank}
+              correctAnswers={userGameScore?.correctAnswers || 0}
+              timeTaken={userGameScore?.timeTaken || 0}
+            />
           ) : (
-            <div className="bg-white/10 p-6 rounded-lg backdrop-blur-sm flex flex-col gap-4">
-              <div className="flex items-center gap-4 mb-6">
-                <Image
-                  src={user?.picture?.replace("_normal", "") || ""}
-                  alt={user?.name || ""}
-                  width={48}
-                  height={48}
-                  className="w-12 h-12 rounded-full"
-                />
-                <div className="flex flex-col">
-                  <h3 className="font-semibold">{user?.name}</h3>
-                  <p className="text-sm">
-                    Today's Score: {userGameScore?.score || 0}
-                  </p>
-                </div>
-              </div>
+            <AnimatePresence mode="wait">
+              {!isTimerRunning ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="bg-white/10 p-8 rounded-lg backdrop-blur-sm flex flex-col items-center justify-center"
+                >
+                  <div className="w-full flex items-center gap-6 mb-8">
+                    <div className="relative">
+                      <Image
+                        src={user?.picture?.replace("_normal", "") || ""}
+                        alt={user?.name || ""}
+                        width={64}
+                        height={64}
+                        className="rounded-full ring-4 ring-yellow-500"
+                      />
+                    </div>
+                    <div className="flex flex-col">
+                      <h3 className="text-2xl font-bold">{user?.name}</h3>
+                      <p className="text-purple-200">
+                        Ready for today's challenge?
+                      </p>
+                    </div>
+                  </div>
 
-              <button
-                onClick={handleStartTimer}
-                className="bg-yellow-500 hover:bg-yellow-400 text-black p-4 rounded-lg transition-colors"
-              >
-                Start Challenge
-              </button>
+                  <button
+                    onClick={handleStartTimer}
+                    className="bg-gradient-to-r from-yellow-500 to-yellow-400 hover:from-yellow-400 hover:to-yellow-300 text-black font-bold py-4 px-8 rounded-full transition-all transform hover:scale-100 scale-95 hover:shadow-xl flex items-center justify-center gap-3 text-lg"
+                  >
+                    <Timer className="h-6 w-6" />
+                    Start Today's Challenge
+                  </button>
+                </motion.div>
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  className="relative"
+                >
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 bg-purple-800/90 px-6 py-2 rounded-full backdrop-blur-sm z-10">
+                    <span className="text-xl font-bold">
+                      {(elapsedTime / 1000).toFixed(1)}s
+                    </span>
+                  </div>
 
-              {isTimerRunning && (
-                <div className="mt-4 text-lg">
-                  Time Elapsed: {(elapsedTime / 1000).toFixed(2)} ms
-                </div>
+                  {currentQuestion && (
+                    <QuestionCard
+                      question={currentQuestion}
+                      onAnswer={handleAnswer}
+                      questionNumber={5 - questions.length + 1}
+                      totalQuestions={5}
+                    />
+                  )}
+                </motion.div>
               )}
-
-              {currentQuestion && (
-                <QuestionCard
-                  question={currentQuestion}
-                  onAnswer={handleAnswer}
-                />
-              )}
-            </div>
+            </AnimatePresence>
           )}
         </div>
       </div>
