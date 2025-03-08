@@ -33,7 +33,30 @@ export default function RootLayout({
         />
         <meta name="author" content="Your Name" />
         <link rel="icon" href="https://culture-king.vercel.app/favicon.ico" />
-        <meta property="og:title" content="Culture King" />
+        <link
+          rel="apple-touch-icon"
+          href="https://culture-king.vercel.app/apple-image.png"
+        />
+        <link
+          rel="android-chrome-icon"
+          href="https://culture-king.vercel.app/apple-image.png"
+        />
+        <link
+          rel="icon"
+          type="image/png"
+          sizes="32x32"
+          href="https://culture-king.vercel.app/apple-image.png"
+        />
+        <link
+          rel="icon"
+          type="image/png"
+          sizes="16x16"
+          href="https://culture-king.vercel.app/apple-image.png"
+        />
+        <meta
+          property="og:title"
+          content="Culture King - The Ultimate Cultural Knowledge Challenge"
+        />
         <meta
           property="og:description"
           content="Join thousands of players competing to be the Culture King. Test your cultural knowledge and race against the clock!"
@@ -52,7 +75,7 @@ export default function RootLayout({
         <meta name="twitter:card" content="summary_large_image" />
         <meta
           name="twitter:title"
-          content="Culture King - Daily Knowledge Competition"
+          content="Culture King - The Ultimate Cultural Knowledge Challenge"
         />
         <meta
           name="twitter:description"
@@ -63,7 +86,7 @@ export default function RootLayout({
           content="https://culture-king.vercel.app/og-image.png"
         />
         <meta name="twitter:url" content="https://culture-king.vercel.app" />
-        <title>Culture King</title>
+        <title>Culture King - The Ultimate Cultural Knowledge Challenge</title>
       </head>
       <UserProvider>
         <body className={inter.className}>
