@@ -51,29 +51,30 @@ export async function POST(req: Request) {
       return new NextResponse(null, { status: 401 });
     }
 
-    const { correctAnswers, timeTaken } = await req.json();
+    const { correctAnswers, timeTaken, score } = await req.json();
 
     const client = await clientPromise;
     const db = client.db(process.env.MONGODB_DATABASE);
     const collection = db.collection("daily_challenges");
 
-    // Calculate score
-    const baseScore = correctAnswers * 1000;
-    const timeBonus = Math.max(0, 30000 - timeTaken) / 100;
-    const score = Math.round(baseScore + timeBonus);
+    // Get today's date range
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
 
     // Calculate rank
     const higherScores = await collection.countDocuments({
       date: {
-        $gte: new Date().setHours(0, 0, 0, 0),
-        $lt: new Date().setHours(23, 59, 59, 999),
+        $gte: today,
+        $lt: tomorrow,
       },
       score: { $gt: score },
     });
 
     const rank = higherScores + 1;
 
-    // Insert the challenge result
+    // Save the challenge result
     await collection.insertOne({
       userId: session.user.sub,
       name: session.user.name,
@@ -85,7 +86,7 @@ export async function POST(req: Request) {
       rank,
     });
 
-    return NextResponse.json({ score, rank });
+    return NextResponse.json({ rank, score, correctAnswers, timeTaken });
   } catch (error) {
     console.error("Error saving challenge result:", error);
     return new NextResponse(null, { status: 500 });

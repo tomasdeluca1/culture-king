@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useEffect, useState } from "react";
@@ -23,8 +24,8 @@ export function StatsCard() {
   useEffect(() => {
     async function fetchStats() {
       try {
-        const { data } = await axios.get<GameStats>("/api/stats");
-        setStats(data);
+        const response = await axios.get<any>("/api/stats");
+        setStats(response.data.gameStats);
       } catch (error) {
         console.error("Error fetching stats:", error);
       } finally {

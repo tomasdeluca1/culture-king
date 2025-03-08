@@ -23,6 +23,7 @@ export async function GET() {
     const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const thisYear = new Date(now.getFullYear(), 0, 1);
     const lastActive = new Date(now.setDate(now.getDate() - 7)); // Active = played in last 7 days
+    console.log(lastActive);
 
     // Run aggregation pipeline
     const [stats] = await collection
@@ -112,7 +113,6 @@ export async function GET() {
         },
       ])
       .toArray();
-
     const gameStats: GameStats = {
       totalPlayers: stats.totalPlayers[0]?.count || 0,
       activePlayers: stats.activePlayers[0]?.count || 0,
@@ -122,8 +122,7 @@ export async function GET() {
       averageScore: Math.round(stats.scores[0]?.averageScore || 0),
       topScore: stats.scores[0]?.topScore || 0,
     };
-
-    return NextResponse.json(gameStats);
+    return NextResponse.json({ gameStats });
   } catch (error) {
     console.error("Error fetching game stats:", error);
     return new NextResponse(null, { status: 500 });

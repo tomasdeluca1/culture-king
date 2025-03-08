@@ -27,6 +27,7 @@ import axios from "axios";
 import Image from "next/image";
 import { getTimeUntilReset } from "@/lib/utils/time";
 import { useRouter } from "next/navigation";
+import { toast } from "react-hot-toast";
 
 interface LeaderboardPlayer {
   userId: string;
@@ -58,8 +59,8 @@ export default function Landing() {
 
   async function fetchStats() {
     try {
-      const { data } = await axios.get<any>("/api/stats");
-      setStats(data);
+      const response = await axios.get<any>("/api/stats");
+      setStats(response.data.gameStats);
     } catch (error) {
       console.error("Error fetching stats:", error);
     } finally {
@@ -76,14 +77,19 @@ export default function Landing() {
       ]);
 
       setLeaderboardData({
-        daily: dailyData.data,
-        monthly: monthlyData.data,
-        yearly: yearlyData.data,
+        daily: dailyData.data || [],
+        monthly: monthlyData.data || [],
+        yearly: yearlyData.data || [],
       });
     } catch (error) {
       console.error("Error fetching leaderboard:", error);
+      toast.error("Failed to fetch leaderboard data");
     }
   }
+  useEffect(() => {
+    fetchStats();
+    fetchLeaderboard();
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -96,9 +102,6 @@ export default function Landing() {
       }
     }, 1000);
 
-    fetchStats();
-    fetchLeaderboard();
-
     return () => {
       clearInterval(timer);
     };
@@ -109,7 +112,12 @@ export default function Landing() {
       if (typeof window !== "undefined") {
         const sectionId = window.location.hash.substring(1);
         const section = document.getElementById(sectionId);
-        section?.scrollIntoView({ behavior: "smooth" });
+        if (section) {
+          const offset = 200 + 64; // Adjusted offset for smoother scrolling, adding margin for fixed nav height
+          const top =
+            section.getBoundingClientRect().top + window.scrollY - offset; // Use window.scrollY for accurate position
+          window.scrollTo({ top, behavior: "smooth" });
+        }
       }
     };
 
@@ -215,7 +223,7 @@ export default function Landing() {
             </div>
 
             <div className="space-y-4">
-              {leaderboardData.daily && leaderboardData.daily.length > 0 && (
+              {leaderboardData.daily && leaderboardData.daily.length > 0 ? (
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
                     <div className="bg-yellow-500 text-black font-bold rounded-full w-8 h-8 flex items-center justify-center">
@@ -226,8 +234,7 @@ export default function Landing() {
                         width={32}
                         height={32}
                         src={
-                          leaderboardData.daily[0].picture ||
-                          "/placeholder.webp"
+                          leaderboardData.daily[0].picture || "/placeholder.png"
                         }
                         alt="Top player"
                         className="rounded-full w-8 h-8"
@@ -251,6 +258,13 @@ export default function Landing() {
                     </div>
                     <Crown className="h-5 w-5 text-yellow-400" />
                   </div>
+                </div>
+              ) : (
+                <div className="flex justify-center items-center">
+                  <p className="text-purple-200 text-lg">
+                    Be the first to score and claim your spot on the
+                    leaderboard!
+                  </p>
                 </div>
               )}
 
@@ -337,9 +351,12 @@ export default function Landing() {
       </section>
 
       {/* Leaderboard Section */}
-      <section className="py-20" id="leaderboard">
+      <section className="py-20" id="leaderboards">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12">
+            <Badge className="mb-4 bg-indigo-700 text-white px-4 py-1 text-sm">
+              Leaderboard
+            </Badge>
             <h2 className="text-3xl md:text-4xl font-bold mb-4">Top Players</h2>
             <p className="text-purple-200">
               Compete with the best and claim your spot on the leaderboard
@@ -364,58 +381,60 @@ export default function Landing() {
                 <Card className="bg-purple-900/50 border-purple-700/50 backdrop-blur-sm shadow-lg">
                   <CardContent className="pt-6">
                     <div className="space-y-4">
-                      {players.slice(0, 5).map((player: any, index: number) => (
-                        <motion.div
-                          key={`${player.userId}-${player.date}`}
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: index * 0.1 }}
-                          className="flex justify-between items-center p-4 rounded-lg bg-purple-800/40 border border-purple-600/30 shadow-md"
-                        >
-                          <div className="flex items-center gap-3">
-                            <Badge
-                              className={`w-8 h-8 flex items-center justify-center rounded-full ${
-                                index === 0
-                                  ? "bg-yellow-500"
-                                  : index === 1
-                                  ? "bg-gray-300"
-                                  : index === 2
-                                  ? "bg-amber-600"
-                                  : "bg-white/10"
-                              } text-black font-bold`}
-                            >
-                              {index + 1}
-                            </Badge>
-                            <Image
-                              src={player.picture || "/placeholder.webp"}
-                              alt={player.name}
-                              width={40}
-                              height={40}
-                              className="rounded-full border-2 border-white"
-                            />
-                            <span className="font-semibold text-lg text-white">
-                              {player.name}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-4">
-                            <div className="flex items-center">
-                              <Star className="h-4 w-4 text-yellow-400 mr-1" />
-                              <span className="text-sm text-white">
-                                {player.correctAnswers}/5
+                      {players
+                        .slice(0, 5)
+                        .map((player: LeaderboardPlayer, index: number) => (
+                          <motion.div
+                            key={`${player.userId}-${player.date}`}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: index * 0.1 }}
+                            className="flex justify-between items-center p-4 rounded-lg bg-purple-800/40 border border-purple-600/30 shadow-md"
+                          >
+                            <div className="flex items-center gap-3">
+                              <Badge
+                                className={`w-8 h-8 flex items-center justify-center rounded-full ${
+                                  index === 0
+                                    ? "bg-yellow-500"
+                                    : index === 1
+                                    ? "bg-gray-300"
+                                    : index === 2
+                                    ? "bg-amber-600"
+                                    : "bg-white/10"
+                                } text-black font-bold`}
+                              >
+                                {index + 1}
+                              </Badge>
+                              <Image
+                                src={player.picture || "/app/favicon.ico"}
+                                alt={player.name}
+                                width={40}
+                                height={40}
+                                className="rounded-full border-2 border-white"
+                              />
+                              <span className="font-semibold text-lg text-white">
+                                {player.name}
                               </span>
                             </div>
-                            <div className="flex items-center">
-                              <Clock className="h-4 w-4 text-purple-300 mr-1" />
-                              <span className="text-sm text-white">
-                                {(player.timeTaken / 1000).toFixed(2)}s
-                              </span>
+                            <div className="flex items-center gap-4">
+                              <div className="flex items-center">
+                                <Star className="h-4 w-4 text-yellow-400 mr-1" />
+                                <span className="text-sm text-white">
+                                  {player.correctAnswers}/5
+                                </span>
+                              </div>
+                              <div className="flex items-center">
+                                <Clock className="h-4 w-4 text-purple-300 mr-1" />
+                                <span className="text-sm text-white">
+                                  {(player.timeTaken / 1000).toFixed(2)}s
+                                </span>
+                              </div>
+                              {index === 0 && (
+                                <Crown className="h-5 w-5 text-yellow-400" />
+                              )}
                             </div>
-                            {index === 0 && (
-                              <Crown className="h-5 w-5 text-yellow-400" />
-                            )}
-                          </div>
-                        </motion.div>
-                      ))}
+                          </motion.div>
+                        ))}
 
                       {players.length === 0 && (
                         <div className="text-center py-8 text-gray-400">
@@ -563,86 +582,54 @@ export default function Landing() {
           <div className="mt-16 text-center">
             <h3 className="text-2xl font-bold mb-6">What Players Are Saying</h3>
             <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
-              <Card className="bg-purple-900/40 border-purple-700/50 backdrop-blur-sm">
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className="h-5 w-5 text-yellow-400 fill-yellow-400"
+              {[
+                {
+                  quote:
+                    "I'm addicted to checking the leaderboard every day. The competition is fierce but friendly!",
+                  username: "@indiemaker",
+                },
+                {
+                  quote:
+                    "Love watching this game evolve in public. The transparency from the creators is refreshing.",
+                  username: "@buildinpublic",
+                },
+                {
+                  quote:
+                    "I've learned so much about culture while having fun. The time pressure makes it exciting!",
+                  username: "@culturefan",
+                },
+              ].map(({ quote, username }, index) => (
+                <Card
+                  key={index}
+                  className="bg-purple-900/50 border border-purple-700/50 backdrop-blur-sm transition-transform transform hover:scale-105 shadow-lg"
+                >
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-center gap-2 mb-4">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className="h-5 w-5 text-yellow-400 fill-yellow-400"
+                        />
+                      ))}
+                    </div>
+                    <p className="text-purple-200 mb-4 text-lg italic">
+                      {quote}
+                    </p>
+                    <div className="flex items-center justify-start gap-2">
+                      <Image
+                        width={32}
+                        height={32}
+                        src="/favicon.ico"
+                        alt="User"
+                        className="w-6 h-6"
                       />
-                    ))}
-                  </div>
-                  <p className="text-purple-200 mb-4">
-                    "I'm addicted to checking the leaderboard every day. The
-                    competition is fierce but friendly!"
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <Image
-                      width={32}
-                      height={32}
-                      src="/placeholder.webp"
-                      alt="User"
-                      className="rounded-full w-8 h-8"
-                    />
-                    <span className="font-semibold">@indiemaker</span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-purple-900/40 border-purple-700/50 backdrop-blur-sm">
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className="h-5 w-5 text-yellow-400 fill-yellow-400"
-                      />
-                    ))}
-                  </div>
-                  <p className="text-purple-200 mb-4">
-                    "Love watching this game evolve in public. The transparency
-                    from the creators is refreshing."
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <Image
-                      width={32}
-                      height={32}
-                      src="/placeholder.webp"
-                      alt="User"
-                      className="rounded-full w-8 h-8"
-                    />
-                    <span className="font-semibold">@buildinpublic</span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-purple-900/40 border-purple-700/50 backdrop-blur-sm">
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-2 mb-4">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className="h-5 w-5 text-yellow-400 fill-yellow-400"
-                      />
-                    ))}
-                  </div>
-                  <p className="text-purple-200 mb-4">
-                    "I've learned so much about culture while having fun. The
-                    time pressure makes it exciting!"
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <Image
-                      width={32}
-                      height={32}
-                      src="/placeholder.webp"
-                      alt="User"
-                      className="rounded-full w-8 h-8"
-                    />
-                    <span className="font-semibold">@culturefan</span>
-                  </div>
-                </CardContent>
-              </Card>
+                      <span className="font-semibold text-purple-100">
+                        {username}
+                      </span>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </div>
         </div>

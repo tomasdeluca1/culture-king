@@ -32,7 +32,7 @@ export default function RootLayout({
           content="Culture King, cultural knowledge, trivia, leaderboard, game"
         />
         <meta name="author" content="Your Name" />
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href="https://culture-king.vercel.app/favicon.ico" />
         <meta property="og:title" content="Culture King" />
         <meta
           property="og:description"
@@ -71,8 +71,9 @@ export default function RootLayout({
             <div className="min-h-screen bg-gradient-to-br from-purple-900 to-indigo-900 text-white">
               {/* Hero Section */}
               <NavBar />
+
               <Toaster />
-              {children}
+              <div className="mt-24">{children}</div>
               <footer className="bg-indigo-950 py-12">
                 <div className="container mx-auto px-4">
                   <div className="flex flex-col md:flex-row justify-between items-center mb-8">
