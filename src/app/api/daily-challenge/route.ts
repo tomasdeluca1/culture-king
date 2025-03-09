@@ -9,6 +9,12 @@ import { logger } from "@/lib/utils/logger";
 export const runtime = "nodejs";
 export const maxDuration = 10;
 
+async function getCollection() {
+  const client = await clientPromise;
+  const db = client.db(process.env.MONGODB_DATABASE);
+  return db.collection("daily_challenges");
+}
+
 export async function GET() {
   return withErrorHandling(async () => {
     const session = await getSession();
@@ -20,9 +26,7 @@ export async function GET() {
       userId: session.user.sub,
     });
 
-    const client = await clientPromise;
-    const db = client.db(process.env.MONGODB_DATABASE);
-    const collection = db.collection("daily_challenges");
+    const collection = await getCollection();
 
     // Log the query parameters
     const nextReset = getNextResetTime();
@@ -80,9 +84,7 @@ export async function POST(req: Request) {
 
     const { correctAnswers, timeTaken, score } = await req.json();
 
-    const client = await clientPromise;
-    const db = client.db(process.env.MONGODB_DATABASE);
-    const collection = db.collection("daily_challenges");
+    const collection = await getCollection();
 
     // Get today's date range
     const today = new Date();

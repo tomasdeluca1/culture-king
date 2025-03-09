@@ -18,6 +18,33 @@ export async function GET() {
     const lastActive = new Date(now.setDate(now.getDate() - 7));
 
     // Use Promise.all to run queries concurrently
+    const totalPlayersPromise = collection
+      .distinct("userId")
+      .then((ids) => ids.length);
+    const activePlayersPromise = collection
+      .distinct("userId", { date: { $gte: lastActive } })
+      .then((ids) => ids.length);
+    const dailyPlayersPromise = collection
+      .distinct("userId", { date: { $gte: today } })
+      .then((ids) => ids.length);
+    const monthlyPlayersPromise = collection
+      .distinct("userId", { date: { $gte: thisMonth } })
+      .then((ids) => ids.length);
+    const yearlyPlayersPromise = collection
+      .distinct("userId", { date: { $gte: thisYear } })
+      .then((ids) => ids.length);
+    const scoresPromise = collection
+      .aggregate([
+        {
+          $group: {
+            _id: null,
+            averageScore: { $avg: "$score" },
+            topScore: { $max: "$score" },
+          },
+        },
+      ])
+      .toArray();
+
     const [
       totalPlayers,
       activePlayers,
@@ -26,30 +53,12 @@ export async function GET() {
       yearlyPlayers,
       scores,
     ] = await Promise.all([
-      collection.distinct("userId").then((ids) => ids.length),
-      collection
-        .distinct("userId", { date: { $gte: lastActive } })
-        .then((ids) => ids.length),
-      collection
-        .distinct("userId", { date: { $gte: today } })
-        .then((ids) => ids.length),
-      collection
-        .distinct("userId", { date: { $gte: thisMonth } })
-        .then((ids) => ids.length),
-      collection
-        .distinct("userId", { date: { $gte: thisYear } })
-        .then((ids) => ids.length),
-      collection
-        .aggregate([
-          {
-            $group: {
-              _id: null,
-              averageScore: { $avg: "$score" },
-              topScore: { $max: "$score" },
-            },
-          },
-        ])
-        .toArray(),
+      totalPlayersPromise,
+      activePlayersPromise,
+      dailyPlayersPromise,
+      monthlyPlayersPromise,
+      yearlyPlayersPromise,
+      scoresPromise,
     ]);
 
     return NextResponse.json({

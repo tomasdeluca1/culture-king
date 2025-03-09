@@ -30,27 +30,25 @@ export async function GET(request: Request) {
       default:
         startDate.setHours(0, 0, 0, 0);
     }
-
-    // Simplified and optimized query
     const topScores = await collection
-      .find(
-        { date: { $gte: startDate } },
-        {
-          sort: { score: -1, timeTaken: 1 },
-          limit: 5,
-          projection: {
-            _id: 0,
-            userId: 1,
-            name: 1,
-            picture: 1,
-            score: 1,
-            correctAnswers: 1,
-            timeTaken: 1,
-            date: 1,
-          },
-        }
-      )
-      .toArray();
+      .find({ date: { $gte: startDate } })
+      .sort({ score: -1, timeTaken: 1 })
+      .limit(5)
+      .project({
+        _id: 0,
+        userId: 1,
+        name: 1,
+        picture: 1,
+        score: 1,
+        correctAnswers: 1,
+        timeTaken: 1,
+        date: 1,
+      })
+      .toArray()
+      .catch((error) => {
+        console.error("Error fetching top scores:", error);
+        throw new Error("Failed to fetch top scores");
+      });
 
     return NextResponse.json(topScores);
   } catch (error) {

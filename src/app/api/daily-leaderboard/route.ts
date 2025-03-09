@@ -18,27 +18,23 @@ export async function GET() {
 
     // Simplified query with index usage
     const topScores = await collection
-      .find(
-        {
-          date: {
-            $gte: prevReset,
-            $lt: nextReset,
-          },
+      .find({
+        date: {
+          $gte: prevReset,
+          $lt: nextReset,
         },
-        {
-          sort: { score: -1, timeTaken: 1 },
-          limit: 10,
-          projection: {
-            _id: 0,
-            userId: 1,
-            name: 1,
-            picture: 1,
-            score: 1,
-            correctAnswers: 1,
-            timeTaken: 1,
-          },
-        }
-      )
+      })
+      .sort({ score: -1, timeTaken: 1 })
+      .limit(10)
+      .project({
+        _id: 0,
+        userId: 1,
+        name: 1,
+        picture: 1,
+        score: 1,
+        correctAnswers: 1,
+        timeTaken: 1,
+      })
       .toArray();
 
     return NextResponse.json(topScores);
