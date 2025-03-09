@@ -4,7 +4,7 @@ import clientPromise from "@/lib/mongodb";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 // Increase the Vercel function timeout (only works on certain plans)
-export const maxDuration = 15; // 15 seconds
+export const maxDuration = 10; // 10 seconds
 
 export async function GET(request: Request) {
   try {
@@ -33,51 +33,23 @@ export async function GET(request: Request) {
         startDate.setHours(0, 0, 0, 0);
     }
 
-    // Add index hint and optimize the query
+    // Simplified and optimized query
     const topScores = await collection
-      .aggregate(
-        [
-          {
-            $match: {
-              date: { $gte: startDate },
-            },
-          },
-          {
-            $lookup: {
-              from: "users",
-              localField: "userId",
-              foreignField: "sub",
-              as: "user",
-            },
-          },
-          {
-            $unwind: {
-              path: "$user",
-              preserveNullAndEmptyArrays: true,
-            },
-          },
-          {
-            $sort: { score: -1, timeTaken: 1 },
-          },
-          {
-            $limit: 5, // Limit to top 5 scores
-          },
-          {
-            $project: {
-              _id: 0,
-              userId: 1,
-              name: 1,
-              picture: 1,
-              score: 1,
-              correctAnswers: 1,
-              timeTaken: 1,
-              date: 1,
-            },
-          },
-        ],
+      .find(
+        { date: { $gte: startDate } },
         {
-          maxTimeMS: 5000, // Set a 5-second timeout for the query
-          allowDiskUse: true, // Allow using disk for large sort operations
+          sort: { score: -1, timeTaken: 1 },
+          limit: 5,
+          projection: {
+            _id: 0,
+            userId: 1,
+            name: 1,
+            picture: 1,
+            score: 1,
+            correctAnswers: 1,
+            timeTaken: 1,
+            date: 1,
+          },
         }
       )
       .toArray();
@@ -86,7 +58,7 @@ export async function GET(request: Request) {
   } catch (error) {
     console.error("Error fetching leaderboard:", error);
     return NextResponse.json(
-      { error: "Failed to fetch leaderboard data" },
+      { error: "Failed to fetch leaderboard" },
       { status: 500 }
     );
   }

@@ -35,6 +35,26 @@ if (process.env.NODE_ENV === "development") {
   clientPromise = client.connect();
 }
 
+// Add this function to create indexes
+async function createIndexes(client: MongoClient) {
+  const db = client.db(process.env.MONGODB_DATABASE);
+  const collection = db.collection("daily_challenges");
+
+  await Promise.all([
+    // Index for daily challenges and leaderboards
+    collection.createIndex({ date: -1, score: -1, timeTaken: 1 }),
+    // Index for user attempts
+    collection.createIndex({ userId: 1, date: -1 }),
+    // Index for stats queries
+    collection.createIndex({ userId: 1 }),
+  ]);
+}
+
+// Call it after connecting
+if (process.env.NODE_ENV !== "production") {
+  clientPromise.then((client) => createIndexes(client));
+}
+
 // Export a module-scoped MongoClient promise. By doing this in a
 // separate module, the client can be shared across functions.
 export default clientPromise;

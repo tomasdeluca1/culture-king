@@ -1,17 +1,63 @@
 import { UserProvider } from "@auth0/nextjs-auth0/client";
 import { Inter } from "next/font/google";
-import { ToasterProvider } from "@/components/providers/ToasterProvider";
 import { ConfettiProvider } from "@/components/providers/ConfettiProvider";
-
-import "./globals.css";
-import React from "react";
-import { Crown } from "lucide-react";
 import { NavBar } from "@/components/navigation/NavBar";
-
 import { Toaster } from "react-hot-toast";
+import { Crown } from "lucide-react";
+import "./globals.css";
+
 const inter = Inter({ subsets: ["latin"] });
 
-export const dynamic = "force-dynamic";
+export const metadata = {
+  title: "Culture King - The Ultimate Cultural Knowledge Challenge",
+  description:
+    "Join thousands of players competing to be the Culture King. Test your cultural knowledge and race against the clock!",
+  keywords: "Culture King, cultural knowledge, trivia, leaderboard, game",
+  authors: [{ name: "Your Name" }],
+  openGraph: {
+    title: "Culture King - The Ultimate Cultural Knowledge Challenge",
+    description:
+      "Join thousands of players competing to be the Culture King. Test your cultural knowledge and race against the clock!",
+    url: "https://culture-king.vercel.app",
+    siteName: "Culture King",
+    images: [
+      {
+        url: "https://culture-king.vercel.app/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Culture King Logo",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Culture King - The Ultimate Cultural Knowledge Challenge",
+    description:
+      "Join thousands of players competing to be the Culture King. Test your cultural knowledge and race against the clock!",
+    images: ["https://culture-king.vercel.app/og-image.png"],
+  },
+  icons: {
+    icon: "https://culture-king.vercel.app/favicon.ico",
+    apple: "https://culture-king.vercel.app/apple-image.png",
+    shortcut: "https://culture-king.vercel.app/apple-image.png",
+    other: [
+      {
+        rel: "icon",
+        type: "image/png",
+        sizes: "32x32",
+        url: "https://culture-king.vercel.app/apple-image.png",
+      },
+      {
+        rel: "icon",
+        type: "image/png",
+        sizes: "16x16",
+        url: "https://culture-king.vercel.app/apple-image.png",
+      },
+    ],
+  },
+};
 
 export default function RootLayout({
   children,
@@ -20,83 +66,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" data-theme="huevsite">
-      <head>
-        <meta charSet="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <meta
-          name="description"
-          content="Join thousands of players competing to be the Culture King. Test your cultural knowledge and race against the clock!"
-        />
-        <meta
-          name="keywords"
-          content="Culture King, cultural knowledge, trivia, leaderboard, game"
-        />
-        <meta name="author" content="Your Name" />
-        <link rel="icon" href="https://culture-king.vercel.app/favicon.ico" />
-        <link
-          rel="apple-touch-icon"
-          href="https://culture-king.vercel.app/apple-image.png"
-        />
-        <link
-          rel="android-chrome-icon"
-          href="https://culture-king.vercel.app/apple-image.png"
-        />
-        <link
-          rel="icon"
-          type="image/png"
-          sizes="32x32"
-          href="https://culture-king.vercel.app/apple-image.png"
-        />
-        <link
-          rel="icon"
-          type="image/png"
-          sizes="16x16"
-          href="https://culture-king.vercel.app/apple-image.png"
-        />
-        <meta
-          property="og:title"
-          content="Culture King - The Ultimate Cultural Knowledge Challenge"
-        />
-        <meta
-          property="og:description"
-          content="Join thousands of players competing to be the Culture King. Test your cultural knowledge and race against the clock!"
-        />
-        <meta
-          property="og:image"
-          content="https://culture-king.vercel.app/og-image.png"
-        />
-        <meta property="og:url" content="https://culture-king.vercel.app" />
-        <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Culture King" />
-        <meta property="og:locale" content="en_US" />
-        <meta property="og:image:width" content="1200" />
-        <meta property="og:image:height" content="630" />
-        <meta property="og:image:alt" content="Culture King Logo" />
-        <meta name="twitter:card" content="summary_large_image" />
-        <meta
-          name="twitter:title"
-          content="Culture King - The Ultimate Cultural Knowledge Challenge"
-        />
-        <meta
-          name="twitter:description"
-          content="Join thousands of players competing to be the Culture King. Test your cultural knowledge and race against the clock!"
-        />
-        <meta
-          name="twitter:image"
-          content="https://culture-king.vercel.app/og-image.png"
-        />
-        <meta name="twitter:url" content="https://culture-king.vercel.app" />
-        <title>Culture King - The Ultimate Cultural Knowledge Challenge</title>
-      </head>
       <UserProvider>
         <body className={inter.className}>
           <ConfettiProvider>
             <div className="min-h-screen bg-gradient-to-br from-purple-900 to-indigo-900 text-white">
-              {/* Hero Section */}
               <NavBar />
-
               <Toaster />
               <div className="mt-24">{children}</div>
+
               <footer className="bg-indigo-950 py-12">
                 <div className="container mx-auto px-4">
                   <div className="flex flex-col md:flex-row justify-between items-center mb-8">
@@ -113,7 +90,6 @@ export default function RootLayout({
                       >
                         Twitter
                       </a>
-
                       <a
                         href="https://www.producthunt.com/posts/culture-king"
                         target="_blank"
@@ -124,6 +100,7 @@ export default function RootLayout({
                       </a>
                     </div>
                   </div>
+
                   <div className="border-t border-purple-800 pt-8 flex flex-col md:flex-row justify-between items-center">
                     <p className="text-purple-300 mb-4 md:mb-0">
                       © {new Date().getFullYear()} Culture King. Built with 💜{" "}
@@ -154,8 +131,6 @@ export default function RootLayout({
                 </div>
               </footer>
             </div>
-
-            <ToasterProvider />
           </ConfettiProvider>
         </body>
       </UserProvider>

@@ -1,92 +1,53 @@
-import { getSession } from "@auth0/nextjs-auth0";
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
+import { getNextResetTime } from "@/lib/utils/time";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
+export const maxDuration = 10;
 
 export async function GET() {
   try {
-    const session = await getSession();
-    if (!session?.user) {
-      return new NextResponse(null, { status: 401 });
-    }
-
     const client = await clientPromise;
     const db = client.db(process.env.MONGODB_DATABASE);
     const collection = db.collection("daily_challenges");
 
-    // Get today's date range
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    // Get today's date range using the reset time
+    const nextReset = getNextResetTime();
+    const prevReset = new Date(nextReset);
+    prevReset.setUTCDate(prevReset.getUTCDate() - 1);
 
-    // Get top 5 scores for today
+    // Simplified query with index usage
     const topScores = await collection
-      .aggregate([
+      .find(
         {
-          $match: {
-            date: {
-              $gte: today,
-              $lt: tomorrow,
-            },
+          date: {
+            $gte: prevReset,
+            $lt: nextReset,
           },
         },
         {
-          $lookup: {
-            from: "users",
-            localField: "userId",
-            foreignField: "sub",
-            as: "user",
-          },
-        },
-        {
-          $lookup: {
-            from: "users",
-            localField: "userId",
-            foreignField: "sub",
-            as: "user",
-            pipeline: [
-              {
-                $project: {
-                  _id: 0,
-                  name: 1,
-                  picture: 1,
-                },
-              },
-            ],
-          },
-        },
-        {
-          $unwind: {
-            path: "$user",
-            preserveNullAndEmptyArrays: true,
-          },
-        },
-        {
-          $sort: { correctAnswers: -1, timeTaken: 1 },
-        },
-        {
-          $limit: 5,
-        },
-        {
-          $project: {
+          sort: { score: -1, timeTaken: 1 },
+          limit: 10,
+          projection: {
             _id: 0,
-            userId: "$userId",
-            name: "$name",
-            picture: "$picture",
+            userId: 1,
+            name: 1,
+            picture: 1,
+            score: 1,
             correctAnswers: 1,
             timeTaken: 1,
-            score: 1,
-            rank: 1,
           },
-        },
-      ])
+        }
+      )
       .toArray();
+
     return NextResponse.json(topScores);
   } catch (error) {
-    console.error("Error fetching leaderboard:", error);
-    return new NextResponse(null, { status: 500 });
+    console.error("Error fetching daily leaderboard:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch daily leaderboard" },
+      { status: 500 }
+    );
   }
 }

@@ -4,6 +4,10 @@ import { getTodaysQuestions } from "@/lib/services/questions";
 import clientPromise from "@/lib/mongodb";
 import { getNextResetTime } from "@/lib/utils/time";
 
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+export const maxDuration = 10;
+
 export async function GET() {
   try {
     const session = await getSession();
@@ -15,19 +19,29 @@ export async function GET() {
     const db = client.db(process.env.MONGODB_DATABASE);
     const collection = db.collection("daily_challenges");
 
-    // Get today's date range using the reset time
     const nextReset = getNextResetTime();
     const prevReset = new Date(nextReset);
     prevReset.setUTCDate(prevReset.getUTCDate() - 1);
 
-    // Check if user has already played in the current period
-    const existingAttempt = await collection.findOne({
-      userId: session.user.sub,
-      date: {
-        $gte: prevReset,
-        $lt: nextReset,
+    // Use index on userId and date
+    const existingAttempt = await collection.findOne(
+      {
+        userId: session.user.sub,
+        date: {
+          $gte: prevReset,
+          $lt: nextReset,
+        },
       },
-    });
+      {
+        projection: {
+          _id: 0,
+          score: 1,
+          rank: 1,
+          correctAnswers: 1,
+          timeTaken: 1,
+        },
+      }
+    );
 
     if (existingAttempt) {
       return NextResponse.json({
@@ -40,7 +54,10 @@ export async function GET() {
     return NextResponse.json({ hasPlayed: false, questions });
   } catch (error) {
     console.error("Error in daily challenge route:", error);
-    return new NextResponse(null, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch daily challenge" },
+      { status: 500 }
+    );
   }
 }
 
