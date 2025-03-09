@@ -1,27 +1,35 @@
 type LogLevel = "info" | "warn" | "error" | "debug";
 
+type LogData = Record<string, unknown>;
+
+interface ErrorDetails {
+  name: string;
+  message: string;
+  stack?: string;
+}
+
 interface LogMessage {
   timestamp: string;
   level: LogLevel;
   message: string;
   path?: string;
-  error?: any;
-  data?: any;
+  error?: ErrorDetails;
+  data?: LogData;
 }
 
 export const logger = {
-  info: (message: string, data?: any) => log("info", message, data),
-  warn: (message: string, data?: any) => log("warn", message, data),
-  error: (message: string, error?: any, data?: any) =>
+  info: (message: string, data?: LogData) => log("info", message, data),
+  warn: (message: string, data?: LogData) => log("warn", message, data),
+  error: (message: string, error?: Error, data?: LogData) =>
     log("error", message, error, data),
-  debug: (message: string, data?: any) => log("debug", message, data),
+  debug: (message: string, data?: LogData) => log("debug", message, data),
 };
 
 function log(
   level: LogLevel,
   message: string,
-  errorOrData?: any,
-  additionalData?: any
+  errorOrData?: Error | LogData,
+  additionalData?: LogData
 ) {
   const logMessage: LogMessage = {
     timestamp: new Date().toISOString(),
@@ -37,7 +45,7 @@ function log(
       stack: errorOrData.stack,
     };
     if (additionalData) logMessage.data = additionalData;
-  } else if (errorOrData) {
+  } else if (errorOrData && !(errorOrData instanceof Error)) {
     logMessage.data = errorOrData;
   }
 

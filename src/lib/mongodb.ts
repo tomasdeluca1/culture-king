@@ -1,4 +1,4 @@
-import { MongoClient } from "mongodb";
+import { MongoClient, MongoClientOptions } from "mongodb";
 import { logger } from "@/lib/utils/logger";
 
 if (!process.env.MONGODB_URI) {
@@ -6,13 +6,10 @@ if (!process.env.MONGODB_URI) {
 }
 
 const uri = process.env.MONGODB_URI;
-const options = {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  enableUtf8Validation: false, // Disable strict UTF-8 validation
-  // Add monitoring
+const options: MongoClientOptions = {
+  // Remove deprecated options
+  enableUtf8Validation: false,
   monitorCommands: true,
-  serverMonitoring: true,
 } as const;
 
 let client: MongoClient;
