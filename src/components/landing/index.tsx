@@ -56,8 +56,6 @@ export default function Landing() {
   const [isLoading, setIsLoading] = useState(true);
 
   const router = useRouter();
-  console.log(process.env.MONGODB_DATABASE);
-  console.log(process.env.MONGODB_URI);
 
   async function fetchStats() {
     try {
