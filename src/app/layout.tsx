@@ -1,19 +1,16 @@
-"use client";
-
 import { UserProvider } from "@auth0/nextjs-auth0/client";
 import { Inter } from "next/font/google";
 import { ConfettiProvider } from "@/components/providers/ConfettiProvider";
 import { NavBar } from "@/components/navigation/NavBar";
 import { Toaster } from "react-hot-toast";
 import { Crown } from "lucide-react";
+import { RouteLogger } from "@/components/analytics/RouteLogger";
 import "./globals.css";
-import { useEffect } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
-import { Metadata } from "next";
+import { Suspense } from "react";
 
 const inter = Inter({ subsets: ["latin"] });
 
-export const metadata: Metadata = {
+export const metadata = {
   title: "Culture King - The Ultimate Cultural Knowledge Challenge",
   description:
     "Join thousands of players competing to be the Culture King. Test your cultural knowledge and race against the clock!",
@@ -76,36 +73,6 @@ export const metadata: Metadata = {
   },
 };
 
-function RouteChangeLogger() {
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
-
-  useEffect(() => {
-    const logRouteChange = () => {
-      const performance = window.performance;
-      const navigationEntry = performance.getEntriesByType(
-        "navigation"
-      )[0] as PerformanceNavigationTiming;
-      const paintEntries = performance.getEntriesByType("paint");
-
-      console.log("Route Performance:", {
-        route: pathname + searchParams.toString(),
-        timing: {
-          ttfb: navigationEntry.responseStart - navigationEntry.requestStart,
-          fcp: paintEntries.find(
-            (entry) => entry.name === "first-contentful-paint"
-          )?.startTime,
-          load: navigationEntry.loadEventEnd - navigationEntry.startTime,
-        },
-      });
-    };
-
-    logRouteChange();
-  }, [pathname, searchParams]);
-
-  return null;
-}
-
 export default function RootLayout({
   children,
 }: {
@@ -115,13 +82,16 @@ export default function RootLayout({
     <html lang="en" data-theme="huevsite">
       <UserProvider>
         <body className={inter.className}>
-          <RouteChangeLogger />
+          <Suspense fallback={null}>
+            <RouteLogger />
+          </Suspense>
           <ConfettiProvider>
             <div className="min-h-screen bg-gradient-to-br from-purple-900 to-indigo-900 text-white">
               <NavBar />
               <Toaster />
-              <div className="mt-24">{children}</div>
-
+              <div className="mt-24">
+                <Suspense fallback={null}>{children}</Suspense>
+              </div>
               <footer className="bg-indigo-950 py-12">
                 <div className="container mx-auto px-4">
                   <div className="flex flex-col md:flex-row justify-between items-center mb-8">
@@ -148,7 +118,6 @@ export default function RootLayout({
                       </a>
                     </div>
                   </div>
-
                   <div className="border-t border-purple-800 pt-8 flex flex-col md:flex-row justify-between items-center">
                     <p className="text-purple-300 mb-4 md:mb-0">
                       © {new Date().getFullYear()} Culture King. Built with 💜{" "}
@@ -158,6 +127,7 @@ export default function RootLayout({
                         rel="noopener noreferrer"
                         className="text-purple-300 hover:text-white"
                       >
+                        {" "}
                         @_huevsite
                       </a>
                     </p>

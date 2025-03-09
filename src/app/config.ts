@@ -4,3 +4,8 @@ export const runtime = "nodejs"; // This ensures the app runs on Node.js runtime
 export const generateStaticParams = async () => {
   return [];
 };
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+export const dynamicParams = true;

@@ -1,3 +1,4 @@
+/* eslint-disable no-var */
 import { MongoClient, MongoClientOptions } from "mongodb";
 import { logger } from "@/lib/utils/logger";
 

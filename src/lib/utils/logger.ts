@@ -20,7 +20,7 @@ interface LogMessage {
 export const logger = {
   info: (message: string, data?: LogData) => log("info", message, data),
   warn: (message: string, data?: LogData) => log("warn", message, data),
-  error: (message: string, error?: Error, data?: LogData) =>
+  error: (message: string, error?: Error | unknown, data?: LogData) =>
     log("error", message, error, data),
   debug: (message: string, data?: LogData) => log("debug", message, data),
 };
@@ -28,7 +28,7 @@ export const logger = {
 function log(
   level: LogLevel,
   message: string,
-  errorOrData?: Error | LogData,
+  errorOrData?: Error | unknown | LogData,
   additionalData?: LogData
 ) {
   const logMessage: LogMessage = {
@@ -38,15 +38,15 @@ function log(
     path: getCurrentPath(),
   };
 
-  if (level === "error" && errorOrData instanceof Error) {
+  if (errorOrData instanceof Error) {
     logMessage.error = {
       name: errorOrData.name,
       message: errorOrData.message,
       stack: errorOrData.stack,
     };
     if (additionalData) logMessage.data = additionalData;
-  } else if (errorOrData && !(errorOrData instanceof Error)) {
-    logMessage.data = errorOrData;
+  } else if (errorOrData && typeof errorOrData === "object") {
+    logMessage.data = errorOrData as LogData;
   }
 
   // In development, pretty print to console
@@ -60,8 +60,12 @@ function log(
 }
 
 function getCurrentPath() {
-  const error = new Error();
-  const stack = error.stack?.split("\n")[3];
-  const path = stack?.match(/\((.+?)\)/)?.[1] || "";
-  return path.includes("node_modules") ? undefined : path;
+  try {
+    const error = new Error();
+    const stack = error.stack?.split("\n")[3];
+    const path = stack?.match(/\((.+?)\)/)?.[1] || "";
+    return path.includes("node_modules") ? undefined : path;
+  } catch {
+    return undefined;
+  }
 }

@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 
+export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 export const maxDuration = 10;
 
 export async function GET(request: Request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const period = searchParams.get("period") || "daily";
+    const period = new URL(request.url).searchParams.get("period") || "daily";
 
     const client = await clientPromise;
     const db = client.db(process.env.MONGODB_DATABASE);
