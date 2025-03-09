@@ -9,10 +9,11 @@ import { Crown } from "lucide-react";
 import "./globals.css";
 import { useEffect } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
+import { Metadata } from "next";
 
 const inter = Inter({ subsets: ["latin"] });
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Culture King - The Ultimate Cultural Knowledge Challenge",
   description:
     "Join thousands of players competing to be the Culture King. Test your cultural knowledge and race against the clock!",
@@ -43,9 +44,21 @@ export const metadata = {
     images: ["https://culture-king.vercel.app/og-image.png"],
   },
   icons: {
-    icon: "https://culture-king.vercel.app/favicon.ico",
-    apple: "https://culture-king.vercel.app/apple-image.png",
-    shortcut: "https://culture-king.vercel.app/apple-image.png",
+    icon: [
+      { url: "https://culture-king.vercel.app/favicon.ico" },
+      {
+        url: "https://culture-king.vercel.app/apple-image.png",
+        sizes: "180x180",
+        type: "image/png",
+      },
+    ],
+    apple: [
+      {
+        url: "https://culture-king.vercel.app/apple-image.png",
+        sizes: "180x180",
+        type: "image/png",
+      },
+    ],
     other: [
       {
         rel: "icon",

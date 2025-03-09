@@ -7,9 +7,7 @@ if (!process.env.MONGODB_URI) {
 
 const uri = process.env.MONGODB_URI;
 const options: MongoClientOptions = {
-  // Remove deprecated options
   enableUtf8Validation: false,
-  monitorCommands: true,
 } as const;
 
 let client: MongoClient;
@@ -18,49 +16,41 @@ let clientPromise: Promise<MongoClient>;
 async function createMongoClient() {
   const client = new MongoClient(uri, options);
 
-  // Add command monitoring
-  client.on("commandStarted", (event) => {
-    logger.debug("MongoDB command started", {
-      command: event.commandName,
-      db: event.databaseName,
-      requestId: event.requestId,
+  // Add command monitoring only in development
+  if (process.env.NODE_ENV === "development") {
+    client.on("commandStarted", (event) => {
+      logger.debug("MongoDB command started", {
+        command: event.commandName,
+        db: event.databaseName,
+      });
     });
-  });
 
-  client.on("commandSucceeded", (event) => {
-    logger.debug("MongoDB command succeeded", {
-      command: event.commandName,
-      duration: event.duration,
-      requestId: event.requestId,
+    client.on("commandSucceeded", (event) => {
+      logger.debug("MongoDB command succeeded", {
+        command: event.commandName,
+        duration: event.duration,
+      });
     });
-  });
 
-  client.on("commandFailed", (event) => {
-    logger.error("MongoDB command failed", {
-      command: event.commandName,
-      duration: event.duration,
-      failure: event.failure,
-      requestId: event.requestId,
+    client.on("commandFailed", (error) => {
+      logger.error("MongoDB command failed", error);
     });
-  });
+  }
 
   return client;
 }
 
-if (process.env.NODE_ENV === "development") {
-  // In development mode, use a global variable so that the value
-  // is preserved across module reloads caused by HMR (Hot Module Replacement).
-  const globalWithMongo = global as typeof globalThis & {
-    _mongoClientPromise?: Promise<MongoClient>;
-  };
+declare global {
+  var _mongoClientPromise: Promise<MongoClient> | undefined;
+}
 
-  if (!globalWithMongo._mongoClientPromise) {
+if (process.env.NODE_ENV === "development") {
+  if (!global._mongoClientPromise) {
     client = await createMongoClient();
-    globalWithMongo._mongoClientPromise = client.connect();
+    global._mongoClientPromise = client.connect();
   }
-  clientPromise = globalWithMongo._mongoClientPromise;
+  clientPromise = global._mongoClientPromise;
 } else {
-  // In production mode, it's best to not use a global variable.
   client = await createMongoClient();
   clientPromise = client.connect();
 }

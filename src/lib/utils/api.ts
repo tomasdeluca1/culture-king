@@ -19,7 +19,7 @@ export async function withErrorHandling(
   } catch (error) {
     const duration = Date.now() - startTime;
 
-    logger.error(`API ${routeName} failed`, error, {
+    logger.error(`API ${routeName} failed`, error as Error, {
       duration,
     });
 
