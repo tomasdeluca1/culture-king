@@ -2,7 +2,6 @@ import { getSession } from "@auth0/nextjs-auth0";
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 
-export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function GET() {

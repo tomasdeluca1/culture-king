@@ -4,7 +4,6 @@ import { getTodaysQuestions } from "@/lib/services/questions";
 import clientPromise from "@/lib/mongodb";
 import { getNextResetTime } from "@/lib/utils/time";
 
-export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 export const maxDuration = 10;
 

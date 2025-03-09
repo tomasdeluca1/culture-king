@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
 
-export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
-// Increase the Vercel function timeout (only works on certain plans)
-export const maxDuration = 10; // 10 seconds
+export const maxDuration = 10;
 
 export async function GET(request: Request) {
   try {
