@@ -1,3 +1,5 @@
+"use client";
+
 import { UserProvider } from "@auth0/nextjs-auth0/client";
 import { Inter } from "next/font/google";
 import { ConfettiProvider } from "@/components/providers/ConfettiProvider";
@@ -5,6 +7,8 @@ import { NavBar } from "@/components/navigation/NavBar";
 import { Toaster } from "react-hot-toast";
 import { Crown } from "lucide-react";
 import "./globals.css";
+import { useEffect } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -59,6 +63,36 @@ export const metadata = {
   },
 };
 
+function RouteChangeLogger() {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const logRouteChange = () => {
+      const performance = window.performance;
+      const navigationEntry = performance.getEntriesByType(
+        "navigation"
+      )[0] as PerformanceNavigationTiming;
+      const paintEntries = performance.getEntriesByType("paint");
+
+      console.log("Route Performance:", {
+        route: pathname + searchParams.toString(),
+        timing: {
+          ttfb: navigationEntry.responseStart - navigationEntry.requestStart,
+          fcp: paintEntries.find(
+            (entry) => entry.name === "first-contentful-paint"
+          )?.startTime,
+          load: navigationEntry.loadEventEnd - navigationEntry.startTime,
+        },
+      });
+    };
+
+    logRouteChange();
+  }, [pathname, searchParams]);
+
+  return null;
+}
+
 export default function RootLayout({
   children,
 }: {
@@ -68,6 +102,7 @@ export default function RootLayout({
     <html lang="en" data-theme="huevsite">
       <UserProvider>
         <body className={inter.className}>
+          <RouteChangeLogger />
           <ConfettiProvider>
             <div className="min-h-screen bg-gradient-to-br from-purple-900 to-indigo-900 text-white">
               <NavBar />
