@@ -4,11 +4,6 @@ if (!process.env.MONGODB_URI) {
   throw new Error('Invalid/Missing environment variable: "MONGODB_URI"');
 }
 
-console.log("Environment Variables:", {
-  MONGODB_URI: process.env.MONGODB_URI,
-  NODE_ENV: process.env.NODE_ENV,
-});
-
 const uri = process.env.MONGODB_URI;
 const options = {};
 

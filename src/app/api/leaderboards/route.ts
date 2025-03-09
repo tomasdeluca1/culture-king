@@ -6,12 +6,20 @@ export const runtime = "nodejs";
 export const maxDuration = 10;
 
 export async function GET(request: Request) {
+  if (process.env.NODE_ENV === "production") {
+    console.log("process.env.MONGODB_DATABASE", process.env.MONGODB_DATABASE);
+  }
   const period = new URL(request.url).searchParams.get("period") || "daily";
 
   const client = await clientPromise;
   const db = client.db(process.env.MONGODB_DATABASE);
+  if (process.env.NODE_ENV === "production") {
+    console.log("db", db);
+  }
   const collection = db.collection("daily_challenges");
-
+  if (process.env.NODE_ENV === "production") {
+    console.log("collection", collection);
+  }
   // Calculate date ranges
   const now = new Date();
   const startDate = getStartDate(period, now);
@@ -32,6 +40,10 @@ export async function GET(request: Request) {
         date: 1,
       })
       .toArray();
+
+    if (process.env.NODE_ENV === "production") {
+      console.log("Fetched top scores:", topScores);
+    }
 
     return NextResponse.json(topScores);
   } catch (error) {
