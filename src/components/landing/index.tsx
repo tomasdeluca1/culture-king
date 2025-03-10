@@ -310,9 +310,9 @@ export default function Landing() {
                     <div className="flex items-center">
                       <Clock className="h-4 w-4 text-purple-300 mr-1" />
                       <span>
-                        {(
-                          leaderboardData.daily[0].timeTaken || 0 / 1000
-                        ).toFixed(2)}
+                        {(leaderboardData.daily[0].timeTaken! / 1000).toFixed(
+                          2
+                        )}
                         s
                       </span>
                     </div>
