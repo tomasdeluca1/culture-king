@@ -8,71 +8,9 @@ import { RouteLogger } from "@/components/analytics/RouteLogger";
 import "./globals.css";
 import { Suspense } from "react";
 import Link from "next/link";
+import Script from "next/script";
 
 const inter = Inter({ subsets: ["latin"] });
-
-export const metadata = {
-  title: "Culture King - The Ultimate Cultural Knowledge Challenge",
-  description:
-    "Join thousands of players competing to be the Culture King. Test your cultural knowledge and race against the clock!",
-  keywords: "Culture King, cultural knowledge, trivia, leaderboard, game",
-  authors: [{ name: "Your Name" }],
-  openGraph: {
-    title: "Culture King - The Ultimate Cultural Knowledge Challenge",
-    description:
-      "Join thousands of players competing to be the Culture King. Test your cultural knowledge and race against the clock!",
-    url: "https://culture-king.vercel.app",
-    siteName: "Culture King",
-    images: [
-      {
-        url: "https://culture-king.vercel.app/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "Culture King Logo",
-      },
-    ],
-    locale: "en_US",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Culture King - The Ultimate Cultural Knowledge Challenge",
-    description:
-      "Join thousands of players competing to be the Culture King. Test your cultural knowledge and race against the clock!",
-    images: ["https://culture-king.vercel.app/og-image.png"],
-  },
-  icons: {
-    icon: [
-      { url: "https://culture-king.vercel.app/favicon.ico" },
-      {
-        url: "https://culture-king.vercel.app/apple-image.png",
-        sizes: "180x180",
-        type: "image/png",
-      },
-    ],
-    apple: [
-      {
-        url: "https://culture-king.vercel.app/apple-image.png",
-        sizes: "180x180",
-        type: "image/png",
-      },
-    ],
-    other: [
-      {
-        rel: "icon",
-        type: "image/png",
-        sizes: "32x32",
-        url: "https://culture-king.vercel.app/apple-image.png",
-      },
-      {
-        rel: "icon",
-        type: "image/png",
-        sizes: "16x16",
-        url: "https://culture-king.vercel.app/apple-image.png",
-      },
-    ],
-  },
-};
 
 export default function RootLayout({
   children,
@@ -81,6 +19,70 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" data-theme="huevsite" className="min-h-screen">
+      <head>
+        <meta charSet="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta
+          name="description"
+          content="Join thousands of players competing to be the Culture King. Test your cultural knowledge and race against the clock!"
+        />
+        <meta
+          name="keywords"
+          content="Culture King, cultural knowledge, trivia, leaderboard, game"
+        />
+        <meta name="author" content="Your Name" />
+        <meta
+          property="og:title"
+          content="Culture King - The Ultimate Cultural Knowledge Challenge"
+        />
+        <meta
+          property="og:description"
+          content="Join thousands of players competing to be the Culture King. Test your cultural knowledge and race against the clock!"
+        />
+        <meta property="og:url" content="https://culture-king.vercel.app" />
+        <meta
+          property="og:image"
+          content="https://culture-king.vercel.app/og-image.png"
+        />
+        <meta property="og:type" content="website" />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta
+          name="twitter:title"
+          content="Culture King - The Ultimate Cultural Knowledge Challenge"
+        />
+        <meta
+          name="twitter:description"
+          content="Join thousands of players competing to be the Culture King. Test your cultural knowledge and race against the clock!"
+        />
+        <meta
+          name="twitter:image"
+          content="https://culture-king.vercel.app/og-image.png"
+        />
+        <link rel="icon" href="https://culture-king.vercel.app/favicon.ico" />
+        <link
+          rel="apple-touch-icon"
+          href="https://culture-king.vercel.app/apple-image.png"
+          sizes="180x180"
+        />
+        <link
+          rel="icon"
+          type="image/png"
+          sizes="32x32"
+          href="https://culture-king.vercel.app/apple-image.png"
+        />
+        <link
+          rel="icon"
+          type="image/png"
+          sizes="16x16"
+          href="https://culture-king.vercel.app/apple-image.png"
+        />
+        <Script
+          defer
+          src="https://cloud.umami.is/script.js"
+          data-website-id="fe566b1f-97e6-47cd-8b4f-aa95eb5c5dbf"
+          strategy="afterInteractive"
+        />
+      </head>
       <UserProvider>
         <body className={`${inter.className} flex flex-col min-h-screen`}>
           <Suspense fallback={null}>
