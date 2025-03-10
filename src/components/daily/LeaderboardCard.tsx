@@ -31,7 +31,7 @@ export function LeaderboardCard() {
         "/api/daily-leaderboard"
       );
       // Only take the top 5 entries
-      setLeaderboard(data.slice(0, 3));
+      setLeaderboard(data.slice(0, 5));
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to load leaderboard";
@@ -53,7 +53,7 @@ export function LeaderboardCard() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Crown className="h-6 w-6 text-yellow-500" />
-            Today's Top 3
+            Today's Top 5
           </CardTitle>
         </CardHeader>
         <CardContent>

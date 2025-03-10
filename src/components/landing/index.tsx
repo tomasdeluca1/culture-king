@@ -29,21 +29,25 @@ import { getTimeUntilReset } from "@/lib/utils/time";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { useUser } from "@auth0/nextjs-auth0/client";
+import { cn } from "@/lib/utils";
 
-interface LeaderboardPlayer {
+interface LeaderboardEntry {
   userId: string;
   name: string;
   picture: string;
-  score: number;
-  correctAnswers: number;
-  timeTaken: number;
-  date: string;
+  score?: number;
+  totalScore?: number;
+  correctAnswers?: number;
+  timeTaken?: number;
+  gamesPlayed?: number;
+  date?: string;
+  averageTime?: number;
 }
 
 interface LeaderboardData {
-  daily: LeaderboardPlayer[];
-  monthly: LeaderboardPlayer[];
-  yearly: LeaderboardPlayer[];
+  daily: LeaderboardEntry[];
+  monthly: LeaderboardEntry[];
+  yearly: LeaderboardEntry[];
 }
 
 export default function Landing() {
@@ -139,6 +143,55 @@ export default function Landing() {
   };
 
   const { hours, minutes, seconds } = timeUntilReset;
+
+  const renderStats = (entry: LeaderboardEntry, period: string) => {
+    return (
+      <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4">
+        {period === "daily" && (
+          <>
+            <div className="text-center">
+              <div className="text-xs text-gray-400">Score</div>
+              <div className="font-bold text-yellow-500">{entry.score}</div>
+            </div>
+            <div className="text-center">
+              <div className="text-xs text-gray-400">Correct</div>
+              <div className="font-bold text-green-500">
+                {entry.correctAnswers}/5
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="text-xs text-gray-400">Time</div>
+              <div className="font-bold text-blue-500">
+                {(entry.timeTaken! / 1000).toFixed(1)}s
+              </div>
+            </div>
+          </>
+        )}
+        {period !== "daily" && (
+          <>
+            <div className="text-center">
+              <div className="text-xs text-gray-400">Total Score</div>
+              <div className="font-bold text-yellow-500">
+                {entry.totalScore}
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="text-xs text-gray-400">Games</div>
+              <div className="font-bold text-purple-500">
+                {entry.gamesPlayed}
+              </div>
+            </div>
+            <div className="text-center">
+              <div className="text-xs text-gray-400">Avg Time</div>
+              <div className="font-bold text-blue-500">
+                {(entry.averageTime! / 1000).toFixed(1)}s
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    );
+  };
 
   if (isLoading) {
     return (
@@ -257,7 +310,9 @@ export default function Landing() {
                     <div className="flex items-center">
                       <Clock className="h-4 w-4 text-purple-300 mr-1" />
                       <span>
-                        {(leaderboardData.daily[0].timeTaken / 1000).toFixed(2)}
+                        {(
+                          leaderboardData.daily[0].timeTaken || 0 / 1000
+                        ).toFixed(2)}
                         s
                       </span>
                     </div>
@@ -381,67 +436,59 @@ export default function Landing() {
               ))}
             </TabsList>
 
-            {Object.entries(leaderboardData).map(([period, players]) => (
+            {Object.entries(leaderboardData).map(([period, entries]) => (
               <TabsContent key={period} value={period}>
                 <Card className="bg-purple-900/50 border-purple-700/50 backdrop-blur-sm shadow-lg">
                   <CardContent className="pt-6">
                     <div className="space-y-4">
-                      {players
-                        .slice(0, 5)
-                        .map((player: LeaderboardPlayer, index: number) => (
-                          <motion.div
-                            key={`${player.userId}-${player.date}`}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: index * 0.1 }}
-                            className="flex justify-between items-center p-4 rounded-lg bg-purple-800/40 border border-purple-600/30 shadow-md"
-                          >
-                            <div className="flex items-center gap-3">
-                              <Badge
-                                className={`w-8 h-8 flex items-center justify-center rounded-full ${
-                                  index === 0
-                                    ? "bg-yellow-500"
-                                    : index === 1
-                                    ? "bg-gray-300"
-                                    : index === 2
-                                    ? "bg-amber-600"
-                                    : "bg-white/10"
-                                } text-black font-bold`}
-                              >
-                                {index + 1}
-                              </Badge>
-                              <Image
-                                src={player.picture || "/app/favicon.ico"}
-                                alt={player.name}
-                                width={40}
-                                height={40}
-                                className="rounded-full border-2 border-white"
-                              />
-                              <span className="font-semibold text-lg text-white">
-                                {player.name}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-4">
-                              <div className="flex items-center">
-                                <Star className="h-4 w-4 text-yellow-400 mr-1" />
-                                <span className="text-sm text-white">
-                                  {player.correctAnswers}/5
-                                </span>
+                      {entries.map((entry: LeaderboardEntry, index: number) => (
+                        <motion.div
+                          key={`${entry.userId}-${entry.date || index}`}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.05 }}
+                          className={cn(
+                            "flex flex-col sm:flex-row items-center gap-4 p-4 rounded-lg",
+                            "bg-gradient-to-r from-purple-900/30 to-indigo-900/30",
+                            "border border-purple-700/30 hover:border-purple-600/50",
+                            "transition-all duration-200"
+                          )}
+                        >
+                          <div className="flex items-center gap-3 flex-1">
+                            <Badge
+                              className={cn(
+                                "w-8 h-8 flex items-center justify-center rounded-full text-black font-bold",
+                                index === 0 && "bg-yellow-500",
+                                index === 1 && "bg-gray-300",
+                                index === 2 && "bg-amber-600",
+                                index > 2 && "bg-white/20 text-white"
+                              )}
+                            >
+                              {index + 1}
+                            </Badge>
+                            <Image
+                              src={entry.picture}
+                              alt={entry.name}
+                              width={32}
+                              height={32}
+                              className="rounded-full ring-2 ring-purple-500/30"
+                            />
+                            <div className="min-w-0">
+                              <div className="font-medium truncate">
+                                {entry.name}
                               </div>
-                              <div className="flex items-center">
-                                <Clock className="h-4 w-4 text-purple-300 mr-1" />
-                                <span className="text-sm text-white">
-                                  {(player.timeTaken / 1000).toFixed(2)}s
-                                </span>
-                              </div>
-                              {index === 0 && (
-                                <Crown className="h-5 w-5 text-yellow-400" />
+                              {entry.date && (
+                                <div className="text-xs text-gray-400">
+                                  {new Date(entry.date).toLocaleDateString()}
+                                </div>
                               )}
                             </div>
-                          </motion.div>
-                        ))}
+                          </div>
+                          {renderStats(entry, period)}
+                        </motion.div>
+                      ))}
 
-                      {players.length === 0 && (
+                      {entries.length === 0 && (
                         <div className="text-center py-8 text-gray-400">
                           No scores yet for this period.
                         </div>

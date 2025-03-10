@@ -37,7 +37,33 @@ export async function GET(request: Request) {
       nextReset,
     });
 
-    // Use aggregation for cumulative scores
+    if (period === "daily") {
+      // For daily leaderboard, get individual scores
+      const leaderboard = await collection
+        .find({
+          date: {
+            $gte: startDate,
+            $lt: nextReset,
+          },
+        })
+        .sort({ score: -1, timeTaken: 1 })
+        .project({
+          _id: 0,
+          userId: 1,
+          name: 1,
+          picture: 1,
+          score: 1,
+          correctAnswers: 1,
+          timeTaken: 1,
+          date: 1,
+        })
+        .limit(10)
+        .toArray();
+
+      return NextResponse.json(leaderboard);
+    }
+
+    // For monthly and yearly, use aggregation for cumulative scores
     const leaderboard = await collection
       .aggregate([
         {
@@ -64,6 +90,18 @@ export async function GET(request: Request) {
           $sort: {
             totalScore: -1,
             averageTime: 1,
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            userId: "$_id",
+            name: 1,
+            picture: 1,
+            totalScore: 1,
+            gamesPlayed: 1,
+            averageTime: 1,
+            date: "$lastPlayed",
           },
         },
         {

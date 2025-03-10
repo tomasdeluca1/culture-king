@@ -142,7 +142,7 @@ export default function CultureKing() {
     return () => clearInterval(timer);
   }, [isTimerRunning, startTime]);
 
-  if (userLoading || isLoading) {
+  if (user && isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="flex flex-col items-center gap-4">
@@ -171,23 +171,44 @@ export default function CultureKing() {
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh] p-6 rounded-lg">
-        <div className="text-center">
-          <h1 className="text-5xl font-extrabold text-white mb-4">
+      <motion.div
+        className="flex items-center justify-center min-h-[70vh] p-6 rounded-lg"
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+      >
+        <motion.div
+          className="text-center"
+          initial={{ y: 20 }}
+          animate={{ y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <motion.h1
+            className="text-5xl font-extrabold text-white mb-4"
+            whileHover={{ scale: 1.05 }}
+            transition={{ duration: 0.3 }}
+          >
             Culture King
-          </h1>
-          <p className="text-lg text-purple-100 mb-6">
+          </motion.h1>
+          <motion.p
+            className="text-lg text-purple-100 mb-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+          >
             Join the daily knowledge competition to showcase your skills and
             compete with others!
-          </p>
-          <a
+          </motion.p>
+          <motion.a
             href="/api/auth/login"
-            className="inline-block bg-yellow-500 hover:bg-yellow-400 text-black px-8 py-4 rounded-lg font-semibold transition-colors shadow-md transform hover:scale-105"
+            className="inline-block bg-yellow-500 hover:bg-yellow-400 text-black px-8 py-4 rounded-lg font-semibold transition-colors shadow-md"
+            whileHover={{ scale: 1.05 }}
+            transition={{ duration: 0.3 }}
           >
             Login to Play
-          </a>
-        </div>
-      </div>
+          </motion.a>
+        </motion.div>
+      </motion.div>
     );
   }
 
