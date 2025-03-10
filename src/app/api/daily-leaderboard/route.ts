@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { getNextResetTime } from "@/lib/utils/time";
+import { getCurrentResetTime, getNextResetTime } from "@/lib/utils/time";
 import { getCollection } from "@/lib/db/collections";
+import { logger } from "@/lib/utils/logger";
 
 export const runtime = "nodejs";
 export const maxDuration = 10;
@@ -10,20 +11,24 @@ export async function GET() {
     const collection = await getCollection();
 
     // Get today's date range using the reset time
-    const nextReset = getNextResetTime();
-    const prevReset = new Date(nextReset);
-    prevReset.setUTCDate(prevReset.getUTCDate() - 1);
+    const today = getCurrentResetTime();
+    const tomorrow = getNextResetTime();
 
-    // Simplified query with index usage
+    logger.debug("Fetching daily leaderboard", {
+      today,
+      tomorrow,
+    });
+
+    // Query for today's entries only
     const topScores = await collection
       .find({
         date: {
-          $gte: prevReset,
-          $lt: nextReset,
+          $gte: today,
+          $lt: tomorrow,
         },
       })
       .sort({ score: -1, timeTaken: 1 })
-      .limit(10)
+      .limit(5)
       .project({
         _id: 0,
         userId: 1,
@@ -32,12 +37,17 @@ export async function GET() {
         score: 1,
         correctAnswers: 1,
         timeTaken: 1,
+        date: 1,
       })
       .toArray();
 
+    logger.debug("Daily leaderboard fetched", {
+      entriesCount: topScores.length,
+    });
+
     return NextResponse.json(topScores);
   } catch (error) {
-    console.error("Error fetching daily leaderboard:", error);
+    logger.error("Error fetching daily leaderboard:", error);
     return NextResponse.json(
       { error: "Failed to fetch daily leaderboard" },
       { status: 500 }

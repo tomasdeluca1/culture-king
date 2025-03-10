@@ -11,11 +11,13 @@ import { toast } from "react-hot-toast";
 import { cn } from "@/lib/utils";
 
 interface LeaderboardEntry {
+  userId: string;
   name: string;
   picture: string;
   score: number;
+  correctAnswers: number;
   timeTaken: number;
-  rank: number;
+  date: string;
 }
 
 export function LeaderboardCard() {
@@ -30,7 +32,6 @@ export function LeaderboardCard() {
       const { data } = await axios.get<LeaderboardEntry[]>(
         "/api/daily-leaderboard"
       );
-      // Only take the top 5 entries
       setLeaderboard(data.slice(0, 5));
     } catch (error) {
       const message =
@@ -45,6 +46,9 @@ export function LeaderboardCard() {
 
   useEffect(() => {
     fetchLeaderboard();
+    // Refresh every minute
+    const interval = setInterval(fetchLeaderboard, 60000);
+    return () => clearInterval(interval);
   }, []);
 
   if (isLoading) {
@@ -92,11 +96,11 @@ export function LeaderboardCard() {
           ) : (
             leaderboard.map((entry, index) => (
               <motion.div
-                key={index}
+                key={entry.userId}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="flex items-center gap-4 p-3 bg-purple-900/30 rounded-lg border border-purple-700/30"
+                className="flex flex-col sm:flex-row items-center gap-4 p-3 bg-purple-900/30 rounded-lg border border-purple-700/30"
               >
                 <div className="flex items-center gap-3 flex-1">
                   <Badge
@@ -111,20 +115,37 @@ export function LeaderboardCard() {
                     {index + 1}
                   </Badge>
                   <Image
-                    src={entry.picture || ""}
-                    alt={entry.name || "User image"}
+                    src={entry.picture}
+                    alt={entry.name}
                     width={32}
                     height={32}
                     className="rounded-full ring-2 ring-purple-500/30"
                   />
-                  <span className="font-medium text-purple-50">
-                    {entry.name}
-                  </span>
+                  <div className="min-w-0">
+                    <div className="font-medium truncate">{entry.name}</div>
+                    <div className="text-xs text-gray-400">
+                      {new Date(entry.date).toLocaleTimeString()}
+                    </div>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <div className="font-bold text-yellow-500">{entry.score}</div>
-                  <div className="text-xs text-purple-300">
-                    {(entry.timeTaken / 1000).toFixed(1)}s
+                <div className="flex items-center gap-4">
+                  <div className="text-center">
+                    <div className="text-xs text-gray-400">Score</div>
+                    <div className="font-bold text-yellow-500">
+                      {entry.score}
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xs text-gray-400">Correct</div>
+                    <div className="font-bold text-green-500">
+                      {entry.correctAnswers}/5
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-xs text-gray-400">Time</div>
+                    <div className="font-bold text-blue-500">
+                      {(entry.timeTaken / 1000).toFixed(1)}s
+                    </div>
                   </div>
                 </div>
               </motion.div>
