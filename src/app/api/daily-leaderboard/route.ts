@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getNextResetTime } from "@/lib/utils/time";
-import { getCollection } from "../daily-challenge/route";
+import { getCollection } from "@/lib/db/collections";
 
 export const runtime = "nodejs";
 export const maxDuration = 10;

@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { getCollection } from "../daily-challenge/route";
+
 import { getNextResetTime } from "@/lib/utils/time";
 import { logger } from "@/lib/utils/logger";
+import { getCollection } from "@/lib/db/collections";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
