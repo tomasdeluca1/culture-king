@@ -48,7 +48,6 @@ export default function CultureKing() {
         const response = await axios.get<DailyChallengeResponse>(
           "/api/daily-challenge"
         );
-        console.log(response.data.questions);
         if (response.data.hasPlayed) {
           setHasPlayed(true);
           setUserGameScore(response.data.userGameScore || null);
@@ -106,7 +105,6 @@ export default function CultureKing() {
         });
 
         if (response.data) {
-          console.log(response);
           setRank(response.data.rank);
           setUserGameScore({
             score: response.data.score,
