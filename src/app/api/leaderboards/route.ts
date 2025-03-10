@@ -20,15 +20,16 @@ export async function GET(request: Request) {
 
     switch (period) {
       case "monthly":
-        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
         break;
       case "yearly":
-        startDate = new Date(now.getFullYear(), 0, 1);
+        startDate = new Date(now.getFullYear(), 0, 1, 0, 0, 0);
         break;
       case "daily":
       default:
         startDate = new Date(nextReset);
         startDate.setDate(startDate.getDate() - 1);
+        startDate.setHours(0, 0, 0);
     }
 
     logger.debug("Fetching leaderboard", {
