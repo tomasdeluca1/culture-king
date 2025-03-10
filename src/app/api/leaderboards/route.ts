@@ -1,74 +1,86 @@
 import { NextResponse } from "next/server";
-import clientPromise from "@/lib/mongodb";
+import { getCollection } from "../daily-challenge/route";
+import { getNextResetTime } from "@/lib/utils/time";
+import { logger } from "@/lib/utils/logger";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 export const maxDuration = 10;
 
 export async function GET(request: Request) {
-  if (process.env.NODE_ENV === "production") {
-    console.log("process.env.MONGODB_DATABASE", process.env.MONGODB_DATABASE);
-  }
-  const period = new URL(request.url).searchParams.get("period") || "daily";
-
-  const client = await clientPromise;
-  const db = client.db(process.env.MONGODB_DATABASE);
-  if (process.env.NODE_ENV === "production") {
-    console.log("db", db);
-  }
-  const collection = db.collection("daily_challenges");
-  if (process.env.NODE_ENV === "production") {
-    console.log("collection", collection);
-  }
-  // Calculate date ranges
-  const now = new Date();
-  const startDate = getStartDate(period, now);
-
   try {
-    const topScores = await collection
-      .find({ date: { $gte: startDate } })
-      .sort({ score: -1, timeTaken: 1 })
-      .limit(5)
-      .project({
-        _id: 0,
-        userId: 1,
-        name: 1,
-        picture: 1,
-        score: 1,
-        correctAnswers: 1,
-        timeTaken: 1,
-        date: 1,
-      })
-      .toArray();
+    const period = new URL(request.url).searchParams.get("period") || "daily";
+    const collection = await getCollection();
 
-    if (process.env.NODE_ENV === "production") {
-      console.log("Fetched top scores:", topScores);
+    // Calculate date ranges
+    const now = new Date();
+    const nextReset = getNextResetTime();
+    let startDate: Date;
+
+    switch (period) {
+      case "monthly":
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        break;
+      case "yearly":
+        startDate = new Date(now.getFullYear(), 0, 1);
+        break;
+      case "daily":
+      default:
+        startDate = new Date(nextReset);
+        startDate.setDate(startDate.getDate() - 1);
     }
 
-    return NextResponse.json(topScores);
+    logger.debug("Fetching leaderboard", {
+      period,
+      startDate,
+      nextReset,
+    });
+
+    // Use aggregation for cumulative scores
+    const leaderboard = await collection
+      .aggregate([
+        {
+          $match: {
+            date: {
+              $gte: startDate,
+              $lt: nextReset,
+            },
+          },
+        },
+        {
+          $group: {
+            _id: "$userId",
+            name: { $first: "$name" },
+            picture: { $first: "$picture" },
+            totalScore: { $sum: "$score" },
+            totalCorrectAnswers: { $sum: "$correctAnswers" },
+            averageTime: { $avg: "$timeTaken" },
+            gamesPlayed: { $sum: 1 },
+            lastPlayed: { $max: "$date" },
+          },
+        },
+        {
+          $sort: {
+            totalScore: -1,
+            averageTime: 1,
+          },
+        },
+        {
+          $limit: 10,
+        },
+      ])
+      .toArray();
+
+    logger.debug("Leaderboard fetched", {
+      entriesCount: leaderboard.length,
+    });
+
+    return NextResponse.json(leaderboard);
   } catch (error) {
-    console.error("Error fetching leaderboard:", error);
+    logger.error("Error fetching leaderboard:", error);
     return NextResponse.json(
       { error: "Failed to fetch leaderboard" },
       { status: 500 }
     );
   }
-}
-
-function getStartDate(period: string, now: Date): Date {
-  const startDate = new Date();
-  switch (period) {
-    case "daily":
-      startDate.setHours(0, 0, 0, 0);
-      break;
-    case "monthly":
-      startDate.setFullYear(now.getFullYear(), now.getMonth(), 1);
-      break;
-    case "yearly":
-      startDate.setFullYear(now.getFullYear(), 0, 1);
-      break;
-    default:
-      startDate.setHours(0, 0, 0, 0);
-  }
-  return startDate;
 }

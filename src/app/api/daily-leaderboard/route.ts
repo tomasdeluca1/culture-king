@@ -1,15 +1,13 @@
 import { NextResponse } from "next/server";
-import clientPromise from "@/lib/mongodb";
 import { getNextResetTime } from "@/lib/utils/time";
+import { getCollection } from "../daily-challenge/route";
 
 export const runtime = "nodejs";
 export const maxDuration = 10;
 
 export async function GET() {
   try {
-    const client = await clientPromise;
-    const db = client.db(process.env.MONGODB_DATABASE);
-    const collection = db.collection("daily_challenges");
+    const collection = await getCollection();
 
     // Get today's date range using the reset time
     const nextReset = getNextResetTime();

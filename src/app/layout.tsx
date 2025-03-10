@@ -7,6 +7,7 @@ import { Crown } from "lucide-react";
 import { RouteLogger } from "@/components/analytics/RouteLogger";
 import "./globals.css";
 import { Suspense } from "react";
+import Link from "next/link";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -79,71 +80,72 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" data-theme="huevsite">
+    <html lang="en" data-theme="huevsite" className="min-h-screen">
       <UserProvider>
-        <body className={inter.className}>
+        <body className={`${inter.className} flex flex-col min-h-screen`}>
           <Suspense fallback={null}>
             <RouteLogger />
           </Suspense>
           <ConfettiProvider>
-            <div className="min-h-screen bg-gradient-to-br from-purple-900 to-indigo-900 text-white">
+            <Toaster />
+            <div className="flex flex-col min-h-screen bg-gradient-to-br from-purple-900 to-indigo-900 text-white">
               <NavBar />
-              <Toaster />
-              <div className="mt-24">
+              <main className="flex-grow mt-16">
                 <Suspense fallback={null}>{children}</Suspense>
-              </div>
-              <footer className="bg-indigo-950 py-12">
+              </main>
+              <footer className="bg-indigo-950/80 backdrop-blur-sm py-12 mt-auto">
                 <div className="container mx-auto px-4">
                   <div className="flex flex-col md:flex-row justify-between items-center mb-8">
                     <div className="flex items-center gap-2 mb-4 md:mb-0">
                       <Crown className="h-8 w-8 text-yellow-400" />
-                      <span className="text-2xl font-bold">Culture King</span>
+                      <span className="text-2xl font-bold bg-gradient-to-r from-yellow-400 to-yellow-200 text-transparent bg-clip-text">
+                        Culture King
+                      </span>
                     </div>
                     <div className="flex gap-6">
-                      <a
+                      <Link
                         href="https://www.x.com/culturek1ng"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-purple-200 hover:text-white"
+                        className="text-purple-200 hover:text-white transition-colors"
                       >
                         Twitter
-                      </a>
-                      <a
+                      </Link>
+                      <Link
                         href="https://www.producthunt.com/posts/culture-king"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-purple-200 hover:text-white"
+                        className="text-purple-200 hover:text-white transition-colors"
                       >
                         Product Hunt
-                      </a>
+                      </Link>
                     </div>
                   </div>
-                  <div className="border-t border-purple-800 pt-8 flex flex-col md:flex-row justify-between items-center">
+                  <div className="border-t border-purple-800/50 pt-8 flex flex-col md:flex-row justify-between items-center">
                     <p className="text-purple-300 mb-4 md:mb-0">
                       © {new Date().getFullYear()} Culture King. Built with 💜{" "}
-                      <a
+                      <Link
                         href="https://www.x.com/_huevsite"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-purple-300 hover:text-white"
+                        className="text-purple-300 hover:text-white transition-colors"
                       >
-                        {" "}
                         @_huevsite
-                      </a>
+                      </Link>
                     </p>
                     <div className="flex gap-6">
-                      <a
-                        href="#"
-                        className="text-purple-300 hover:text-white text-sm"
+                      <Link
+                        href="/privacy"
+                        className="text-purple-300 hover:text-white text-sm transition-colors"
                       >
                         Privacy Policy
-                      </a>
-                      <a
-                        href="#"
-                        className="text-purple-300 hover:text-white text-sm"
+                      </Link>
+                      <Link
+                        href="/terms"
+                        className="text-purple-300 hover:text-white text-sm transition-colors"
                       >
                         Terms of Service
-                      </a>
+                      </Link>
                     </div>
                   </div>
                 </div>

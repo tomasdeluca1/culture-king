@@ -2,17 +2,19 @@ import { getSession } from "@auth0/nextjs-auth0";
 import { NextResponse } from "next/server";
 import { getTodaysQuestions } from "@/lib/services/questions";
 import clientPromise from "@/lib/mongodb";
-import { getNextResetTime } from "@/lib/utils/time";
+import { getCurrentResetTime, getNextResetTime } from "@/lib/utils/time";
 import { withErrorHandling } from "@/lib/utils/api";
 import { logger } from "@/lib/utils/logger";
 
 export const runtime = "nodejs";
 export const maxDuration = 10;
 
-async function getCollection() {
+export async function getCollection() {
   const client = await clientPromise;
   const db = client.db(process.env.MONGODB_DATABASE);
-  return db.collection("daily_challenges");
+  return db.collection("daily_challenges", {
+    enableUtf8Validation: false,
+  });
 }
 
 export async function GET() {
@@ -82,15 +84,19 @@ export async function POST(req: Request) {
       return new NextResponse(null, { status: 401 });
     }
 
-    const { correctAnswers, timeTaken, score } = await req.json();
-
+    const { correctAnswers, timeTaken } = await req.json();
     const collection = await getCollection();
 
+    // New scoring system
+    // Base score: 2000 points per correct answer (up from 1000)
+    // Time bonus: Up to 250 points based on speed (down from 500)
+    const maxTimeAllowed = 30000 * 5; // 30 seconds * 5 questions
+    const timeBonus = Math.max(0, maxTimeAllowed - timeTaken) / 120; // Up to 250 points
+    const score = Math.round(correctAnswers * 2000 + timeBonus);
+
     // Get today's date range
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
+    const today = getCurrentResetTime();
+    const tomorrow = getNextResetTime();
 
     // Calculate rank
     const higherScores = await collection.countDocuments({
@@ -117,7 +123,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ rank, score, correctAnswers, timeTaken });
   } catch (error) {
-    console.error("Error saving challenge result:", error);
+    logger.error("Error saving challenge result:", error);
     return new NextResponse(null, { status: 500 });
   }
 }

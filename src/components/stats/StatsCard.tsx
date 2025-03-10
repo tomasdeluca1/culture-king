@@ -41,7 +41,7 @@ export function StatsCard() {
   }
 
   return (
-    <Card className="transition-transform transform hover:scale-105">
+    <Card className="transition-all duration-300 hover:bg-white/5 rounded-xl">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Activity className="h-5 w-5 text-blue-500" />

@@ -28,6 +28,7 @@ import Image from "next/image";
 import { getTimeUntilReset } from "@/lib/utils/time";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
+import { useUser } from "@auth0/nextjs-auth0/client";
 
 interface LeaderboardPlayer {
   userId: string;
@@ -46,7 +47,9 @@ interface LeaderboardData {
 }
 
 export default function Landing() {
-  const [countdown, setCountdown] = useState(getTimeUntilReset());
+  const [timeUntilReset, setTimeUntilReset] = useState(() =>
+    getTimeUntilReset()
+  );
   const [stats, setStats] = useState<any>(null);
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardData>({
     daily: [],
@@ -54,6 +57,7 @@ export default function Landing() {
     yearly: [],
   });
   const [isLoading, setIsLoading] = useState(true);
+  const { user, isLoading: userLoading } = useUser();
 
   const router = useRouter();
 
@@ -86,6 +90,7 @@ export default function Landing() {
       toast.error("Failed to fetch leaderboard data");
     }
   }
+
   useEffect(() => {
     fetchStats();
     fetchLeaderboard();
@@ -93,19 +98,17 @@ export default function Landing() {
 
   useEffect(() => {
     const timer = setInterval(() => {
-      const timeLeft = getTimeUntilReset();
-      setCountdown(timeLeft);
-
-      // Optional: Refresh page at reset time
-      if (timeLeft.total <= 0) {
-        window.location.reload();
-      }
+      setTimeUntilReset(getTimeUntilReset());
     }, 1000);
 
-    return () => {
-      clearInterval(timer);
-    };
+    return () => clearInterval(timer);
   }, []);
+
+  useEffect(() => {
+    if (user && !userLoading) {
+      router.push("/daily");
+    }
+  }, [user, userLoading, router]);
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -134,6 +137,8 @@ export default function Landing() {
   const handleSuggestions = () => {
     router.push("/suggestions");
   };
+
+  const { hours, minutes, seconds } = timeUntilReset;
 
   if (isLoading) {
     return (
@@ -209,15 +214,15 @@ export default function Landing() {
               <h3 className="text-xl font-bold mb-2">Next Reset In:</h3>
               <div className="flex justify-center gap-4 text-2xl font-mono">
                 <div className="bg-purple-950/50 px-3 py-2 rounded-lg">
-                  {String(countdown.hours).padStart(2, "0")}
+                  {String(hours).padStart(2, "0")}
                 </div>
                 <span className="self-center">:</span>
                 <div className="bg-purple-950/50 px-3 py-2 rounded-lg">
-                  {String(countdown.minutes).padStart(2, "0")}
+                  {String(minutes).padStart(2, "0")}
                 </div>
                 <span className="self-center">:</span>
                 <div className="bg-purple-950/50 px-3 py-2 rounded-lg">
-                  {String(countdown.seconds).padStart(2, "0")}
+                  {String(seconds).padStart(2, "0")}
                 </div>
               </div>
             </div>

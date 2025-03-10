@@ -35,7 +35,7 @@ const TabsContent = React.forwardRef<
 >(({ ...props }, ref) => (
   <TabsPrimitive.Content
     ref={ref}
-    className="mt-4 p-4 bg-purple-900 rounded-lg ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:ring-offset-2"
+    className="mt-4 p-4 bg-purple-900 rounded-xl ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-yellow-500 focus-visible:ring-offset-2"
     {...props}
   />
 ));

@@ -7,12 +7,11 @@ import Image from "next/image";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
-import { Timer } from "lucide-react";
+import { Timer, Loader2 } from "lucide-react";
 
 import { QuestionCard } from "@/components/daily/QuestionCard";
 import { Question } from "@/types/game";
 import { LeaderboardCard } from "@/components/daily/LeaderboardCard";
-// import { CompletedChallengeCard } from "@/components/daily/CompletedChallengeCard";
 import { ChallengeResultCard } from "@/components/daily/ChallengeResultCard";
 
 interface DailyChallengeResponse {
@@ -22,7 +21,7 @@ interface DailyChallengeResponse {
 }
 
 export default function CultureKing() {
-  const { user, isLoading } = useUser();
+  const { user, isLoading: userLoading } = useUser();
   const [currentQuestion, setCurrentQuestion] = useState<Question | null>(null);
   const [userGameScore, setUserGameScore] = useState<{
     score: number;
@@ -36,13 +35,20 @@ export default function CultureKing() {
   const [rank, setRank] = useState<number | null>(null);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const [elapsedTime, setElapsedTime] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchDailyChallenge() {
+      if (!user) return;
+
       try {
+        setIsLoading(true);
+        setError(null);
         const response = await axios.get<DailyChallengeResponse>(
           "/api/daily-challenge"
         );
+        console.log(response.data.questions);
         if (response.data.hasPlayed) {
           setHasPlayed(true);
           setUserGameScore(response.data.userGameScore || null);
@@ -50,18 +56,24 @@ export default function CultureKing() {
         } else if (response.data.questions) {
           setQuestions(response.data.questions);
           setCurrentQuestion(response.data.questions[0]);
-          setStartTime(Date.now());
         }
       } catch (error) {
-        toast.error("Error fetching daily challenge.");
+        const message =
+          error instanceof Error
+            ? error.message
+            : "Failed to load daily challenge";
+        setError(message);
+        toast.error("Error loading daily challenge");
         console.error("Error fetching daily challenge:", error);
+      } finally {
+        setIsLoading(false);
       }
     }
 
-    if (user) {
+    if (user && !userLoading) {
       fetchDailyChallenge();
     }
-  }, [user]);
+  }, [user, userLoading]);
 
   const handleAnswer = async (answer: string) => {
     if (!currentQuestion || !startTime) return;
@@ -82,9 +94,6 @@ export default function CultureKing() {
       const correctAnswers = (userGameScore?.score || 0) + (isCorrect ? 1 : 0);
 
       // Calculate final score
-      // Base score: 1000 points per correct answer
-      // Time bonus: Up to 500 points based on speed (faster = more points)
-      // Maximum time allowed: 30 seconds per question
       const maxTimeAllowed = 30000 * 5; // 30 seconds * 5 questions
       const timeBonus = Math.max(0, maxTimeAllowed - timeTaken) / 60; // Up to 500 points
       const finalScore = correctAnswers * 1000 + timeBonus;
@@ -122,6 +131,7 @@ export default function CultureKing() {
   const handleStartTimer = () => {
     setIsTimerRunning(true);
     setStartTime(Date.now());
+    setElapsedTime(0); // Reset elapsed time when starting the timer
   };
 
   useEffect(() => {
@@ -134,25 +144,47 @@ export default function CultureKing() {
     return () => clearInterval(timer);
   }, [isTimerRunning, startTime]);
 
-  if (isLoading)
+  if (userLoading || isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-900 to-indigo-900 text-white absolute inset-0">
-        <span className="text-xl">Loading...</span>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-yellow-400" />
+          <p className="text-purple-200">Loading challenge...</p>
+        </div>
       </div>
     );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-6 max-w-md text-center">
+          <p className="text-red-300 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="text-sm text-red-300 hover:text-red-200 underline"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 to-indigo-900 text-white p-8">
-        <div className="max-w-4xl mx-auto flex flex-col gap-8">
-          <h1 className="text-4xl font-bold">Culture King</h1>
-          <p className="text-xl">
-            A daily knowledge competition where you can show off your skills and
-            compete with others.
+      <div className="flex items-center justify-center min-h-[60vh] p-6 rounded-lg">
+        <div className="text-center">
+          <h1 className="text-5xl font-extrabold text-white mb-4">
+            Culture King
+          </h1>
+          <p className="text-lg text-purple-100 mb-6">
+            Join the daily knowledge competition to showcase your skills and
+            compete with others!
           </p>
           <a
             href="/api/auth/login"
-            className="bg-white/10 p-4 rounded-lg hover:bg-white/20 transition-colors"
+            className="inline-block bg-yellow-500 hover:bg-yellow-400 text-black px-8 py-4 rounded-lg font-semibold transition-colors shadow-md transform hover:scale-105"
           >
             Login to Play
           </a>
@@ -208,52 +240,57 @@ export default function CultureKing() {
         <meta name="twitter:url" content="https://culture-king.vercel.app" />
       </Head>
 
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 to-indigo-900 text-white p-8">
+      <div className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto flex flex-col gap-8">
-          {!isTimerRunning && <LeaderboardCard />}
-
           {hasPlayed ? (
-            <ChallengeResultCard
-              score={userGameScore?.score || 0}
-              rank={rank}
-              correctAnswers={userGameScore?.correctAnswers || 0}
-              timeTaken={userGameScore?.timeTaken || 0}
-            />
+            <>
+              <LeaderboardCard />
+              <ChallengeResultCard
+                score={userGameScore?.score || 0}
+                rank={rank}
+                correctAnswers={userGameScore?.correctAnswers || 0}
+                timeTaken={userGameScore?.timeTaken || 0}
+              />
+            </>
           ) : (
             <AnimatePresence mode="wait">
               {!isTimerRunning ? (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="bg-white/10 p-8 rounded-lg backdrop-blur-sm flex flex-col items-center justify-center"
-                >
-                  <div className="w-full flex items-center gap-6 mb-8">
-                    <div className="relative">
-                      <Image
-                        src={user?.picture?.replace("_normal", "") || ""}
-                        alt={user?.name || ""}
-                        width={64}
-                        height={64}
-                        className="rounded-full ring-4 ring-yellow-500"
-                      />
-                    </div>
-                    <div className="flex flex-col">
-                      <h3 className="text-2xl font-bold">{user?.name}</h3>
-                      <p className="text-purple-200">
-                        Ready for today's challenge?
-                      </p>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={handleStartTimer}
-                    className="bg-gradient-to-r from-yellow-500 to-yellow-400 hover:from-yellow-400 hover:to-yellow-300 text-black font-bold py-4 px-8 rounded-full transition-all transform hover:scale-100 scale-95 hover:shadow-xl flex items-center justify-center gap-3 text-lg"
+                <>
+                  {" "}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="bg-white/10 p-8 rounded-lg backdrop-blur-sm"
                   >
-                    <Timer className="h-6 w-6" />
-                    Start Today's Challenge
-                  </button>
-                </motion.div>
+                    <div className="flex items-center gap-6 mb-8">
+                      <div className="relative">
+                        <Image
+                          src={user.picture?.replace("_normal", "") || ""}
+                          alt={user.name || ""}
+                          width={64}
+                          height={64}
+                          className="rounded-full ring-4 ring-yellow-500"
+                        />
+                      </div>
+                      <div>
+                        <h3 className="text-2xl font-bold">{user.name}</h3>
+                        <p className="text-purple-200">
+                          Ready for today's challenge?
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      onClick={handleStartTimer} // Call handleStartTimer to restart the timer
+                      className="w-full bg-gradient-to-r from-yellow-500 to-yellow-400 hover:from-yellow-400 hover:to-yellow-300 text-black font-bold py-4 rounded-lg transition-all transform hover:scale-105 flex items-center justify-center gap-3 text-lg"
+                    >
+                      <Timer className="h-6 w-6" />
+                      Start Today's Challenge
+                    </button>
+                  </motion.div>
+                  <LeaderboardCard />
+                </>
               ) : (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.95 }}

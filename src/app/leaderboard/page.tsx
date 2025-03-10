@@ -9,6 +9,7 @@ import { Crown, Loader2 } from "lucide-react";
 import Image from "next/image";
 import axios from "axios";
 import { StatsCard } from "@/components/stats/StatsCard";
+import { toast } from "react-hot-toast";
 
 interface LeaderboardEntry {
   userId: string;
@@ -24,22 +25,28 @@ export default function LeaderboardPage() {
   const [period, setPeriod] = useState("daily");
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchLeaderboard = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const { data } = await axios.get<LeaderboardEntry[]>(
+        `/api/leaderboards?period=${period}`
+      );
+      setLeaderboard(data);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to load leaderboard";
+      setError(message);
+      toast.error("Error loading leaderboard");
+      console.error("Error fetching leaderboard:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function fetchLeaderboard() {
-      try {
-        setIsLoading(true);
-        const { data } = await axios.get<LeaderboardEntry[]>(
-          `/api/leaderboards?period=${period}`
-        );
-        setLeaderboard(data);
-      } catch (error) {
-        console.error("Error fetching leaderboard:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
     fetchLeaderboard();
   }, [period]);
 
@@ -55,14 +62,29 @@ export default function LeaderboardPage() {
 
         <Tabs defaultValue="daily" onValueChange={setPeriod}>
           <TabsList className="grid grid-cols-3 max-w-[400px] mx-auto mb-8">
-            <TabsTrigger value="daily">Daily</TabsTrigger>
-            <TabsTrigger value="monthly">Monthly</TabsTrigger>
-            <TabsTrigger value="yearly">Yearly</TabsTrigger>
+            <TabsTrigger
+              value="daily"
+              className="data-[state=active]:bg-yellow-500 data-[state=active]:text-black p-2 bg-white/10"
+            >
+              Daily
+            </TabsTrigger>
+            <TabsTrigger
+              value="monthly"
+              className="data-[state=active]:bg-yellow-500 data-[state=active]:text-black p-2 bg-white/10"
+            >
+              Monthly
+            </TabsTrigger>
+            <TabsTrigger
+              value="yearly"
+              className="data-[state=active]:bg-yellow-500 data-[state=active]:text-black p-2 bg-white/10"
+            >
+              Yearly
+            </TabsTrigger>
           </TabsList>
 
           {["daily", "monthly", "yearly"].map((tabPeriod) => (
             <TabsContent key={tabPeriod} value={tabPeriod}>
-              <Card>
+              <Card className="bg-white/5 rounded-xl">
                 <CardHeader>
                   <CardTitle className="flex items-center justify-between">
                     <span className="flex items-center gap-2">
@@ -77,6 +99,20 @@ export default function LeaderboardPage() {
                   {isLoading ? (
                     <div className="flex justify-center items-center h-32">
                       <Loader2 className="h-6 w-6 animate-spin" />
+                    </div>
+                  ) : error ? (
+                    <div className="text-center py-8 text-red-400">
+                      <p>{error}</p>
+                      <button
+                        onClick={fetchLeaderboard}
+                        className="mt-4 text-sm text-purple-400 hover:text-purple-300"
+                      >
+                        Try Again
+                      </button>
+                    </div>
+                  ) : leaderboard.length === 0 ? (
+                    <div className="text-center py-8 text-purple-300">
+                      No entries yet for this period
                     </div>
                   ) : (
                     <div className="space-y-4">
@@ -140,12 +176,6 @@ export default function LeaderboardPage() {
                           </div>
                         </motion.div>
                       ))}
-
-                      {leaderboard.length === 0 && (
-                        <div className="text-center py-8 text-gray-400">
-                          No scores yet for this period.
-                        </div>
-                      )}
                     </div>
                   )}
                 </CardContent>

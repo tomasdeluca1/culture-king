@@ -20,6 +20,8 @@ export function ChallengeResultCard({
   correctAnswers,
   timeTaken,
 }: ChallengeResultCardProps) {
+  // const [isResetting, setIsResetting] = useState(false);
+
   useEffect(() => {
     if (rank && rank <= 3) {
       const jsConfetti = new JSConfetti();
@@ -53,6 +55,28 @@ export function ChallengeResultCard({
 
     window.open(tweetUrl, "_blank");
   };
+
+  // const handleReset = async () => {
+  //   try {
+  //     setIsResetting(true);
+  //     const response = await axios.delete("/api/daily-challenge/reset", {
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //       },
+  //     });
+
+  //     if (response.status === 200) {
+  //       window.location.reload();
+  //     } else {
+  //       throw new Error("Failed to reset challenge");
+  //     }
+  //   } catch (error) {
+  //     toast.error("Failed to reset challenge. Please try again.");
+  //     console.error("Error resetting challenge:", error);
+  //   } finally {
+  //     setIsResetting(false);
+  //   }
+  // };
 
   return (
     <motion.div
@@ -130,6 +154,27 @@ export function ChallengeResultCard({
             <Share2 className="h-5 w-5" />
             Share on X
           </button>
+
+          {/* <div className="mt-6">
+            <button
+              onClick={handleReset}
+              disabled={isResetting}
+              className="tooltip tooltip-bottom w-full bg-gradient-to-r from-yellow-500 to-yellow-400 hover:from-yellow-400 hover:to-yellow-300 text-black font-semibold py-4 px-8 rounded-full shadow-lg transition-transform duration-200 ease-in-out transform hover:scale-105 flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed"
+              data-tip="This will delete your current score."
+            >
+              {isResetting ? (
+                <>
+                  <span className="animate-spin mr-2">⏳</span>
+                  Resetting...
+                </>
+              ) : (
+                <>
+                  <RotateCcw className="w-4 h-4 mr-2" />
+                  Try Again
+                </>
+              )}
+            </button>
+          </div> */}
         </CardContent>
       </Card>
     </motion.div>

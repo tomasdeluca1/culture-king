@@ -2,10 +2,9 @@
 
 import { motion } from "framer-motion";
 import { Question } from "@/types/game";
-import { Card, CardContent } from "@/components/ui/card";
-import { shuffleArray } from "@/lib/utils";
-import { useState, useEffect } from "react";
-import { Progress } from "@/components/ui/progress";
+import { cn, shuffleArray } from "@/lib/utils";
+import { useState } from "react";
+import { useEffect } from "react";
 
 interface QuestionCardProps {
   question: Question;
@@ -29,45 +28,64 @@ export function QuestionCard({
     );
   }, [question]);
 
-  return (
-    <Card className="bg-white/10 backdrop-blur-sm border-purple-700/50">
-      <CardContent className="p-8 space-y-6">
-        <div className="flex flex-col gap-2 items-center mb-6">
-          <Progress
-            value={(questionNumber / totalQuestions) * 100}
-            className="w-full h-2"
-          />
-          <span className="text-sm text-purple-200">
-            Question {questionNumber} of {totalQuestions}
-          </span>
-        </div>
+  const progressPercentage = (questionNumber / totalQuestions) * 100;
 
-        <h3 className="text-2xl font-bold text-center mb-8">
+  return (
+    <div className="bg-white/10 rounded-lg backdrop-blur-sm overflow-hidden">
+      {/* Progress Header */}
+      <div className="bg-purple-900/50 px-6 py-4 border-b border-purple-800/30">
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between text-sm text-purple-200">
+            <span>
+              Question {questionNumber} of {totalQuestions}
+            </span>
+            <span>{Math.round(progressPercentage)}% Complete</span>
+          </div>
+          <div className="relative h-2 w-full bg-purple-950/50 rounded-full overflow-hidden">
+            <motion.div
+              className="absolute left-0 top-0 h-full bg-gradient-to-r from-yellow-500 to-yellow-400"
+              initial={{ width: 0 }}
+              animate={{ width: `${progressPercentage}%` }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Question Content */}
+      <div className="p-6">
+        <h3 className="text-xl md:text-2xl font-medium mb-8 text-center">
           {question.question}
         </h3>
 
-        <div className="grid gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {options.map((option, index) => (
             <motion.button
-              key={index}
+              key={option}
               onClick={() => onAnswer(option)}
-              className="w-full text-left p-6 bg-purple-800/50 hover:bg-purple-700/50 rounded-lg transition-all transform hover:scale-102 hover:shadow-lg border border-purple-600/30"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              className={cn(
+                "w-full p-4 rounded-lg text-left transition-all",
+                "bg-purple-900/30 hover:bg-purple-800/40",
+                "border border-purple-700/30 hover:border-purple-600/50",
+                "focus:outline-none focus:ring-2 focus:ring-purple-500/50",
+                "active:scale-[0.98]"
+              )}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
-              <div className="flex items-center gap-4">
-                <span className="w-8 h-8 rounded-full bg-purple-700/50 flex items-center justify-center text-sm">
+              <div className="flex items-center gap-3">
+                <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-purple-800/50 text-sm">
                   {String.fromCharCode(65 + index)}
                 </span>
-                <span className="text-lg">{option}</span>
+                <span className="text-purple-100">{option}</span>
               </div>
             </motion.button>
           ))}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
