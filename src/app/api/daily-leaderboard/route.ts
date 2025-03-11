@@ -3,6 +3,7 @@ import { getCurrentResetTime, getNextResetTime } from "@/lib/utils/time";
 import { getCollection } from "@/lib/db/collections";
 import { logger } from "@/lib/utils/logger";
 
+export const dynamic = "force-dynamic"; // Disable caching
 export const runtime = "nodejs";
 export const maxDuration = 10;
 
@@ -10,13 +11,13 @@ export async function GET() {
   try {
     const collection = await getCollection();
 
-    // Get today's date range using the reset time
+    // Get today's date range using UTC reset time
     const today = getCurrentResetTime();
     const tomorrow = getNextResetTime();
 
     logger.debug("Fetching daily leaderboard", {
-      today,
-      tomorrow,
+      today: today.toISOString(),
+      tomorrow: tomorrow.toISOString(),
     });
 
     // Query for today's entries only
@@ -43,6 +44,8 @@ export async function GET() {
 
     logger.debug("Daily leaderboard fetched", {
       entriesCount: topScores.length,
+      firstEntry: topScores[0]?.date,
+      lastEntry: topScores[topScores.length - 1]?.date,
     });
 
     return NextResponse.json(topScores);

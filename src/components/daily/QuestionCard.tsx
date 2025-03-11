@@ -23,6 +23,7 @@ export function QuestionCard({
 
   useEffect(() => {
     // Shuffle answers once when question changes
+
     setOptions(
       shuffleArray([...question.incorrect_answers, question.correct_answer])
     );

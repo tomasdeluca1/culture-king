@@ -30,9 +30,9 @@ export function LeaderboardCard() {
       setIsLoading(true);
       setError(null);
       const { data } = await axios.get<LeaderboardEntry[]>(
-        "/api/daily-leaderboard"
+        `/api/daily-leaderboard?t=${Date.now()}`
       );
-      setLeaderboard(data.slice(0, 5));
+      setLeaderboard(data);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : "Failed to load leaderboard";

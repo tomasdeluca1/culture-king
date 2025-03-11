@@ -1,9 +1,17 @@
-// Get the next reset time (3 AM UTC)
+// Get today's reset time (midnight UTC)
+export function getCurrentResetTime(): Date {
+  const now = new Date();
+  const today = new Date(now);
+  today.setUTCHours(0, 0, 0, 0);
+  return today;
+}
+
+// Get tomorrow's reset time (midnight UTC)
 export function getNextResetTime(): Date {
   const now = new Date();
   const tomorrow = new Date(now);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  tomorrow.setHours(0, 0, 0, 0);
+  tomorrow.setUTCDate(tomorrow.getUTCDate() + 1);
+  tomorrow.setUTCHours(0, 0, 0, 0);
   return tomorrow;
 }
 
@@ -22,11 +30,4 @@ export function getTimeUntilReset(): {
   const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
   return { hours, minutes, seconds };
-}
-
-export function getCurrentResetTime(): Date {
-  const now = new Date();
-  const today = new Date(now);
-  today.setHours(0, 0, 0, 0);
-  return today;
 }

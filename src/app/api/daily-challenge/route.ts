@@ -79,12 +79,8 @@ export async function POST(req: Request) {
     const { correctAnswers, timeTaken } = await req.json();
     const collection = await getCollection();
 
-    // New scoring system
-    // Base score: 2000 points per correct answer (up from 1000)
-    // Time bonus: Up to 250 points based on speed (down from 500)
-    const maxTimeAllowed = 30000 * 5; // 30 seconds * 5 questions
-    const timeBonus = Math.max(0, maxTimeAllowed - timeTaken) / 120; // Up to 250 points
-    const score = Math.round(correctAnswers * 2000 + timeBonus);
+    const timePenalty = Math.min(500, (timeTaken / 1000) * 100); // Deduct points based on time taken
+    const score = Math.round(correctAnswers * 3000 - timePenalty);
 
     // Get today's date range
     const today = getCurrentResetTime();
