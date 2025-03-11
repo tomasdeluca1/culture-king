@@ -11,6 +11,7 @@ interface QuestionCardProps {
   onAnswer: (answer: string) => void;
   questionNumber: number;
   totalQuestions: number;
+  isSubmitting?: boolean;
 }
 
 export function QuestionCard({
@@ -18,6 +19,7 @@ export function QuestionCard({
   onAnswer,
   questionNumber,
   totalQuestions,
+  isSubmitting = false,
 }: QuestionCardProps) {
   const [options, setOptions] = useState<string[]>([]);
 
@@ -64,18 +66,20 @@ export function QuestionCard({
             <motion.button
               key={option}
               onClick={() => onAnswer(option)}
+              disabled={isSubmitting}
               className={cn(
                 "w-full p-4 rounded-lg text-left transition-all",
                 "bg-purple-900/30 hover:bg-purple-800/40",
                 "border border-purple-700/30 hover:border-purple-600/50",
                 "focus:outline-none focus:ring-2 focus:ring-purple-500/50",
-                "active:scale-[0.98]"
+                "active:scale-[0.98]",
+                isSubmitting && "opacity-50 cursor-not-allowed"
               )}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={isSubmitting ? {} : { scale: 1.02 }}
+              whileTap={isSubmitting ? {} : { scale: 0.98 }}
             >
               <div className="flex items-center gap-3">
                 <span className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-full bg-purple-800/50 text-sm">

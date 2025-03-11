@@ -79,8 +79,10 @@ export async function POST(req: Request) {
     const { correctAnswers, timeTaken } = await req.json();
     const collection = await getCollection();
 
-    const timePenalty = Math.min(500, (timeTaken / 1000) * 100); // Deduct points based on time taken
-    const score = Math.round(correctAnswers * 3000 - timePenalty);
+    const baseScore = correctAnswers * 3000; // Base score from correct answers
+    const timePenalty = (timeTaken / 1000) * 50; // More balanced time penalty
+
+    const score = Math.round(baseScore - timePenalty);
 
     // Get today's date range
     const today = getCurrentResetTime();

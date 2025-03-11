@@ -37,6 +37,7 @@ export default function CultureKing() {
   const [elapsedTime, setElapsedTime] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     async function fetchDailyChallenge() {
@@ -75,9 +76,10 @@ export default function CultureKing() {
   }, [user, userLoading]);
 
   const handleAnswer = async (answer: string) => {
-    if (!currentQuestion || !startTime) return;
+    if (!currentQuestion || !startTime || isSubmitting) return;
 
     const isCorrect = currentQuestion.correct_answer === answer;
+    const isLastQuestion = questions.length === 1;
 
     // Update the score immediately for user feedback
     if (isCorrect) {
@@ -88,7 +90,8 @@ export default function CultureKing() {
     }
 
     // If this was the last question
-    if (questions.length === 1) {
+    if (isLastQuestion) {
+      setIsSubmitting(true); // Prevent double submissions
       const timeTaken = Date.now() - startTime;
       const correctAnswers = (userGameScore?.score || 0) + (isCorrect ? 1 : 0);
 
@@ -113,11 +116,13 @@ export default function CultureKing() {
           });
           setHasPlayed(true);
           setStartTime(null);
-          toast("Challenge completed!");
+          toast.success("Challenge completed!");
         }
       } catch (error) {
         console.error("Error saving challenge result:", error);
         toast.error("Failed to save your score");
+      } finally {
+        setIsSubmitting(false);
       }
     } else {
       // Move to next question
