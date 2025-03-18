@@ -114,7 +114,7 @@ export default function RootLayout({
                         Twitter
                       </Link>
                       <Link
-                        href="https://www.producthunt.com/posts/culture-king"
+                        href="https://www.producthunt.com/posts/culture-king?utm_source=other&utm_medium=social"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-purple-200 hover:text-white transition-colors"
